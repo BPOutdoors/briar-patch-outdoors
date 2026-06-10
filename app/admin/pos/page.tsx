@@ -1,10 +1,19 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
-const GA_TAX_RATE = 0.08 // 8% Georgia sales tax
+const GA_TAX_RATE = 0.08
+
+const BILL_DENOMS = [
+  { value: 100, label: '$100' }, { value: 50, label: '$50' }, { value: 20, label: '$20' },
+  { value: 10, label: '$10' }, { value: 5, label: '$5' }, { value: 1, label: '$1' },
+]
+const COIN_DENOMS = [
+  { cents: 50, label: '50¢' }, { cents: 25, label: '25¢' }, { cents: 10, label: '10¢' },
+  { cents: 5, label: '5¢' }, { cents: 1, label: '1¢' },
+]
 
 type CartItem = {
   product_id: string
@@ -13,8 +22,11 @@ type CartItem = {
   brand: string
   price: number
   quantity: number
-  discount_pct: number // manual line discount
+  discount_pct: number
   image_url: string | null
+  local_qty: number  // in-store stock at time of adding
+  product_type: string
+  fulfillment: 'in_store' | 'store_order' | 'dropship'
 }
 
 type Customer = {
@@ -29,13 +41,36 @@ type Customer = {
   visit_count: number
 }
 
+type SuspendedTx = {
+  id: string
+  label: string
+  cart: CartItem[]
+  customer: Customer | null
+  orderDiscount: number
+  createdAt: string
+}
+
 type PaymentMethod = 'cash' | 'card' | 'check' | null
 
-export default function POSPage() {
-  // Layout state
-  const [activeSection, setActiveSection] = useState<'products' | 'customers'>('products')
+const BROAD_CATS = [
+  { slug: 'all', name: 'All' },
+  { slug: 'archery', name: 'Archery' },
+  { slug: 'hunting', name: 'Hunting' },
+  { slug: 'fishing', name: 'Fishing' },
+  { slug: 'camping', name: 'Camping & Outdoors' },
+  { slug: 'clothing', name: 'Clothing & Footwear' },
+  { slug: 'optics', name: 'Optics' },
+  { slug: 'firearms-ammo', name: 'Firearms & Ammo' },
+  { slug: 'wildlife-feeders', name: 'Wildlife & Feeders' },
+  { slug: 'accessories', name: 'Other' },
+  { slug: 'services', name: '🔧 Services' },
+]
 
-  // Product browse
+export default function POSPage() {
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const barcodeInputRef = useRef<HTMLInputElement>(null)
+
+  // Products
   const [products, setProducts] = useState<any[]>([])
   const [productSearch, setProductSearch] = useState('')
   const [broadCat, setBroadCat] = useState('all')
@@ -43,12 +78,10 @@ export default function POSPage() {
   const [productPage, setProductPage] = useState(0)
   const [productTotal, setProductTotal] = useState(0)
   const PRODUCT_PAGE_SIZE = 60
-  const searchInputRef = useRef<HTMLInputElement>(null)
-  const barcodeInputRef = useRef<HTMLInputElement>(null)
 
   // Cart
   const [cart, setCart] = useState<CartItem[]>([])
-  const [orderDiscount, setOrderDiscount] = useState(0) // percent off entire order
+  const [orderDiscount, setOrderDiscount] = useState(0)
 
   // Customer
   const [customer, setCustomer] = useState<Customer | null>(null)
@@ -72,22 +105,35 @@ export default function POSPage() {
   const [sendingEmail, setSendingEmail] = useState(false)
   const [showReceiptOptions, setShowReceiptOptions] = useState(false)
 
-  // Broad categories (same as lib/categories.ts)
-  const BROAD_CATS = [
-    { slug: 'all', name: 'All' },
-    { slug: 'archery', name: 'Archery' },
-    { slug: 'hunting', name: 'Hunting' },
-    { slug: 'fishing', name: 'Fishing' },
-    { slug: 'camping', name: 'Camping & Outdoors' },
-    { slug: 'clothing', name: 'Clothing & Footwear' },
-    { slug: 'optics', name: 'Optics' },
-    { slug: 'firearms-ammo', name: 'Firearms & Ammo' },
-    { slug: 'wildlife-feeders', name: 'Wildlife & Feeders' },
-    { slug: 'accessories', name: 'Other' },
-    { slug: 'services', name: '🔧 Services' },
-  ]
+  // ── DRAWER ──────────────────────────────────────────────────────────────────
+  const [drawerStatus, setDrawerStatus] = useState<'open' | 'closed'>('closed')
+  const [drawerSession, setDrawerSession] = useState<any>(null)
+  const [showDrawerModal, setShowDrawerModal] = useState<'open' | 'close' | null>(null)
+  const [drawerOpeningCash, setDrawerOpeningCash] = useState('')
+  const [billCounts, setBillCounts] = useState<Record<number, number>>({})
+  const [coinCounts, setCoinCounts] = useState<Record<number, number>>({})
+  const [drawerClosing, setDrawerClosing] = useState(false)
+  const [closeSummary, setCloseSummary] = useState<{ cashSales: number; expected: number; variance: number } | null>(null)
 
+  // ── SUSPEND / RECALL ─────────────────────────────────────────────────────────
+  const [suspended, setSuspended] = useState<SuspendedTx[]>([])
+  const [showSuspendModal, setShowSuspendModal] = useState(false)
+  const [showRecallModal, setShowRecallModal] = useState(false)
+  const [suspendLabel, setSuspendLabel] = useState('')
+
+  // ── ORDER / DROPSHIP (post-payment fulfillment) ───────────────────────────
+  const [dropshipAddress, setDropshipAddress] = useState({ name: '', street: '', city: '', state: 'GA', zip: '' })
+
+  // Load drawer + suspended from localStorage on mount
   useEffect(() => {
+    const savedDrawer = localStorage.getItem('pos_drawer')
+    if (savedDrawer) {
+      try { const s = JSON.parse(savedDrawer); setDrawerSession(s); setDrawerStatus('open') } catch (_) {}
+    }
+    const savedSuspended = localStorage.getItem('pos_suspended')
+    if (savedSuspended) {
+      try { setSuspended(JSON.parse(savedSuspended)) } catch (_) {}
+    }
     searchInputRef.current?.focus()
   }, [])
 
@@ -96,23 +142,22 @@ export default function POSPage() {
     fetchProducts(productSearch, 0, broadCat)
   }, [broadCat])
 
+  // ── Products ─────────────────────────────────────────────────────────────────
   async function fetchProducts(q = productSearch, page = productPage, cat = broadCat) {
     setLoadingProducts(true)
     const from = page * PRODUCT_PAGE_SIZE
     const to = from + PRODUCT_PAGE_SIZE - 1
     let query = supabase
       .from('products')
-      .select('id, kinsey_sku, name, brand, display_price, image_url, broad_category, product_type, in_store, quantity, category_name', { count: 'exact' })
+      .select('id, kinsey_sku, name, brand, display_price, image_url, broad_category, product_type, in_store, quantity, category_name, in_stock', { count: 'exact' })
       .eq('visible', true)
       .gt('display_price', 0)
       .order('name')
       .range(from, to)
 
     if (cat === 'services') {
-      // Services tab: show only labor/service items
       query = query.eq('product_type', 'labor')
     } else {
-      // Normal tabs: exclude labor items, filter by category
       query = query.neq('product_type', 'labor')
       if (cat !== 'all') query = query.eq('broad_category', cat)
     }
@@ -128,7 +173,7 @@ export default function POSPage() {
     if (!upc.trim()) return
     const { data } = await supabase
       .from('products')
-      .select('id, kinsey_sku, name, brand, display_price, image_url')
+      .select('id, kinsey_sku, name, brand, display_price, image_url, product_type, quantity, in_stock')
       .or(`upc.eq.${upc},kinsey_sku.eq.${upc}`)
       .eq('visible', true)
       .single()
@@ -143,6 +188,10 @@ export default function POSPage() {
         return prev.map(i => i.product_id === product.id ? { ...i, quantity: i.quantity + qty } : i)
       }
       const groupDiscount = customer?.customer_groups?.discount_percentage || 0
+      const localQty = product.quantity ?? 0
+      const isDistributor = product.product_type === 'distributor' || !product.product_type
+      const inStoreStock = isDistributor ? 0 : localQty
+      const needsFulfillment = inStoreStock <= 0 && product.product_type !== 'labor'
       return [...prev, {
         product_id: product.id,
         kinsey_sku: product.kinsey_sku,
@@ -152,6 +201,9 @@ export default function POSPage() {
         quantity: qty,
         discount_pct: groupDiscount,
         image_url: product.image_url || null,
+        local_qty: inStoreStock,
+        product_type: product.product_type || 'distributor',
+        fulfillment: needsFulfillment ? 'store_order' : 'in_store',
       }]
     })
   }
@@ -165,22 +217,104 @@ export default function POSPage() {
     setCart(prev => prev.map(i => i.product_id === productId ? { ...i, discount_pct: Math.min(100, Math.max(0, pct)) } : i))
   }
 
+  function updateFulfillment(productId: string, fulfillment: CartItem['fulfillment']) {
+    setCart(prev => prev.map(i => i.product_id === productId ? { ...i, fulfillment } : i))
+  }
+
   function removeFromCart(productId: string) {
     setCart(prev => prev.filter(i => i.product_id !== productId))
   }
 
   // Totals
-  const subtotal = cart.reduce((sum, item) => {
-    const linePrice = item.price * item.quantity * (1 - item.discount_pct / 100)
-    return sum + linePrice
-  }, 0)
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity * (1 - item.discount_pct / 100), 0)
   const orderDiscountAmount = subtotal * (orderDiscount / 100)
   const subtotalAfterDiscount = subtotal - orderDiscountAmount
   const taxAmount = subtotalAfterDiscount * GA_TAX_RATE
   const total = subtotalAfterDiscount + taxAmount
   const changeDue = paymentMethod === 'cash' && cashTendered ? Math.max(0, parseFloat(cashTendered) - total) : 0
 
-  // Customer search
+  const oosCartItems = cart.filter(i => i.fulfillment !== 'in_store')
+  const hasDropship = oosCartItems.some(i => i.fulfillment === 'dropship')
+
+  // ── DRAWER ─────────────────────────────────────────────────────────────────
+  const countedBills = BILL_DENOMS.reduce((sum, d) => sum + d.value * (billCounts[d.value] || 0), 0)
+  const countedCents = COIN_DENOMS.reduce((sum, d) => sum + d.cents * (coinCounts[d.cents] || 0), 0)
+  const countedCash = countedBills + countedCents / 100
+
+  async function openDrawer() {
+    const opening = parseFloat(drawerOpeningCash) || 0
+    const session = { openedAt: new Date().toISOString(), openingCash: opening }
+    localStorage.setItem('pos_drawer', JSON.stringify(session))
+    setDrawerSession(session)
+    setDrawerStatus('open')
+    setShowDrawerModal(null)
+    setDrawerOpeningCash('')
+    await supabase.from('drawer_sessions').insert({ opening_cash: opening, opened_at: session.openedAt })
+  }
+
+  async function prepareCloseDrawer() {
+    if (!drawerSession) return
+    setDrawerClosing(true)
+    const { data: cashOrders } = await supabase
+      .from('orders')
+      .select('total')
+      .eq('payment_method', 'cash')
+      .eq('source', 'pos')
+      .gte('created_at', drawerSession.openedAt)
+    const cashSales = (cashOrders || []).reduce((sum: number, o: any) => sum + (o.total || 0), 0)
+    const expected = (drawerSession.openingCash || 0) + cashSales
+    setCloseSummary({ cashSales, expected, variance: countedCash - expected })
+    setDrawerClosing(false)
+  }
+
+  async function closeDrawer() {
+    if (!drawerSession || !closeSummary) return
+    await supabase.from('drawer_sessions').update({
+      closed_at: new Date().toISOString(),
+      closing_cash: countedCash,
+      expected_cash: closeSummary.expected,
+      variance: closeSummary.variance,
+      denomination_counts: { bills: billCounts, coins: coinCounts },
+    }).eq('opened_at', drawerSession.openedAt)
+    localStorage.removeItem('pos_drawer')
+    setDrawerSession(null)
+    setDrawerStatus('closed')
+    setShowDrawerModal(null)
+    setBillCounts({})
+    setCoinCounts({})
+    setCloseSummary(null)
+  }
+
+  // ── SUSPEND / RECALL ─────────────────────────────────────────────────────
+  function suspendTransaction() {
+    if (cart.length === 0) return
+    const tx: SuspendedTx = {
+      id: Date.now().toString(),
+      label: suspendLabel.trim() || `Transaction ${suspended.length + 1}`,
+      cart: [...cart],
+      customer,
+      orderDiscount,
+      createdAt: new Date().toISOString(),
+    }
+    const updated = [...suspended, tx]
+    setSuspended(updated)
+    localStorage.setItem('pos_suspended', JSON.stringify(updated))
+    setShowSuspendModal(false)
+    setSuspendLabel('')
+    resetTransaction()
+  }
+
+  function recallTransaction(tx: SuspendedTx) {
+    setCart(tx.cart)
+    setCustomer(tx.customer)
+    setOrderDiscount(tx.orderDiscount)
+    const updated = suspended.filter(t => t.id !== tx.id)
+    setSuspended(updated)
+    localStorage.setItem('pos_suspended', JSON.stringify(updated))
+    setShowRecallModal(false)
+  }
+
+  // ── Customer ──────────────────────────────────────────────────────────────
   async function searchCustomers(q: string) {
     setCustomerSearch(q)
     if (!q || q.length < 2) { setCustomerResults([]); return }
@@ -198,7 +332,6 @@ export default function POSPage() {
     setCustomer(c)
     setCustomerResults([])
     setCustomerSearch('')
-    // Apply group discount to all cart items
     if (c.customer_groups?.discount_percentage) {
       const pct = c.customer_groups.discount_percentage
       setCart(prev => prev.map(item => ({ ...item, discount_pct: Math.max(item.discount_pct, pct) })))
@@ -219,18 +352,15 @@ export default function POSPage() {
     }
   }
 
-  // Payment processing
+  // ── Payment ───────────────────────────────────────────────────────────────
   async function processCardPayment() {
     setTerminalStatus('connecting')
     setTerminalMessage('Connecting to terminal...')
     setProcessingPayment(true)
     try {
-      // Get connection token
       const tokenRes = await fetch('/api/stripe/terminal-token', { method: 'POST' })
       const { secret, error: tokenError } = await tokenRes.json()
       if (tokenError) throw new Error(tokenError)
-
-      // In simulator mode — just simulate approval after a delay
       setTerminalStatus('waiting')
       setTerminalMessage('Waiting for card... (Simulator Mode)')
       await new Promise(r => setTimeout(r, 2000))
@@ -249,10 +379,7 @@ export default function POSPage() {
 
   async function completeCashPayment() {
     const tendered = parseFloat(cashTendered)
-    if (isNaN(tendered) || tendered < total) {
-      alert('Cash tendered must be at least $' + total.toFixed(2))
-      return
-    }
+    if (isNaN(tendered) || tendered < total) { alert('Cash tendered must be at least $' + total.toFixed(2)); return }
     setProcessingPayment(true)
     await completeOrder('cash', { cash_tendered: tendered, change_due: changeDue })
   }
@@ -271,7 +398,7 @@ export default function POSPage() {
       payment_status: 'paid',
       subtotal: subtotalAfterDiscount,
       tax: taxAmount,
-      total: total,
+      total,
       discount_amount: orderDiscountAmount,
       discount_percentage: orderDiscount,
       notes: paymentMeta.check_number ? `Check #${paymentMeta.check_number}` : null,
@@ -279,10 +406,7 @@ export default function POSPage() {
     }
 
     const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert(orderPayload)
-      .select()
-      .single()
+      .from('orders').insert(orderPayload).select().single()
 
     if (orderError) {
       alert('Error saving order: ' + orderError.message)
@@ -301,29 +425,47 @@ export default function POSPage() {
       unit_price: item.price,
       discount_percentage: item.discount_pct,
       line_total: item.price * item.quantity * (1 - item.discount_pct / 100),
+      fulfillment_type: item.fulfillment,
     }))
     await supabase.from('order_items').insert(items)
 
-    // Decrement inventory
-    for (const item of cart) {
+    // Decrement in-store inventory for in_store items only
+    for (const item of cart.filter(i => i.fulfillment === 'in_store')) {
       const { error: rpcError } = await supabase.rpc('decrement_inventory', {
         p_product_id: item.product_id,
         p_quantity: item.quantity,
       })
       if (rpcError) {
-        // RPC not yet created — fall back to direct update
-        const { data: pData } = await supabase
-          .from('products')
-          .select('quantity')
-          .eq('id', item.product_id)
-          .single()
+        const { data: pData } = await supabase.from('products').select('quantity').eq('id', item.product_id).single()
         if (pData) {
           await supabase.from('products').update({ quantity: Math.max(0, (pData.quantity || 0) - item.quantity) }).eq('id', item.product_id)
         }
       }
     }
 
-    // Update customer lifetime spend
+    // Add OOS items to restock list
+    const oosItems = cart.filter(i => i.fulfillment !== 'in_store')
+    if (oosItems.length > 0) {
+      const restockEntries = oosItems.map(item => ({
+        product_id: item.product_id,
+        product_name: item.name,
+        brand: item.brand,
+        kinsey_sku: item.kinsey_sku,
+        quantity_needed: item.quantity,
+        status: 'pending',
+        fulfillment_type: item.fulfillment,
+        order_id: order.id,
+        customer_name: customer ? `${customer.first_name} ${customer.last_name}` : null,
+        customer_phone: customer?.phone || null,
+        notes: item.fulfillment === 'dropship'
+          ? `Dropship to: ${dropshipAddress.name}, ${dropshipAddress.street}, ${dropshipAddress.city}, ${dropshipAddress.state} ${dropshipAddress.zip}`
+          : null,
+        added_by: 'pos',
+      }))
+      await supabase.from('restock_list').insert(restockEntries)
+    }
+
+    // Update customer stats
     if (customer) {
       await supabase.from('customers').update({
         lifetime_spend: (customer.lifetime_spend || 0) + total,
@@ -332,7 +474,7 @@ export default function POSPage() {
       }).eq('id', customer.id)
     }
 
-    setCompletedOrder({ ...order, items, customer })
+    setCompletedOrder({ ...order, items, customer, hasRestockItems: oosItems.length > 0 })
     setShowReceiptOptions(true)
     setProcessingPayment(false)
   }
@@ -341,7 +483,7 @@ export default function POSPage() {
     const win = window.open('', '_blank', 'width=400,height=700')
     if (!win) return
     const lines = order.items.map((item: any) =>
-      `<tr><td>${item.quantity}x ${item.product_name}</td><td style="text-align:right">$${item.line_total.toFixed(2)}</td></tr>`
+      `<tr><td>${item.quantity}x ${item.product_name}${item.fulfillment_type !== 'in_store' ? ' <span style="color:#c4842a;font-size:10px">[' + (item.fulfillment_type === 'dropship' ? 'SHIP' : 'ORDER') + ']</span>' : ''}</td><td style="text-align:right">$${item.line_total.toFixed(2)}</td></tr>`
     ).join('')
     win.document.write(`
       <html><head><title>Receipt</title>
@@ -357,7 +499,7 @@ export default function POSPage() {
       </style></head>
       <body>
         <h2>BRIAR PATCH OUTDOORS</h2>
-        <p>Eatonton, GA</p>
+        <p>Eatonton, GA · (706) 749-6994</p>
         <p>briarpatchoutdoors.com</p>
         <div class="divider"></div>
         <p>${new Date(order.created_at).toLocaleString()}</p>
@@ -374,6 +516,7 @@ export default function POSPage() {
           ${order.metadata?.cash_tendered ? `<tr><td>Cash</td><td style="text-align:right">$${parseFloat(order.metadata.cash_tendered).toFixed(2)}</td></tr>` : ''}
           ${order.metadata?.change_due > 0 ? `<tr><td>Change</td><td style="text-align:right">$${order.metadata.change_due.toFixed(2)}</td></tr>` : ''}
         </table>
+        ${order.hasRestockItems ? `<div class="divider"></div><p style="font-size:10px">* Items marked [ORDER] or [SHIP] are on order — you will be notified when ready.</p>` : ''}
         <div class="divider"></div>
         <p>Thank you for shopping with us!</p>
       </body></html>
@@ -396,7 +539,7 @@ export default function POSPage() {
     else alert('Failed to send: ' + result.error)
   }
 
-  function startNewTransaction() {
+  function resetTransaction() {
     setCart([])
     setCustomer(null)
     setPaymentMethod(null)
@@ -408,8 +551,11 @@ export default function POSPage() {
     setCompletedOrder(null)
     setShowReceiptOptions(false)
     setEmailAddress('')
+    setDropshipAddress({ name: '', street: '', city: '', state: 'GA', zip: '' })
     searchInputRef.current?.focus()
   }
+
+  function startNewTransaction() { resetTransaction() }
 
   const canCharge = cart.length > 0 && paymentMethod !== null
   const canCompletePayment = canCharge && !processingPayment && (
@@ -418,13 +564,14 @@ export default function POSPage() {
     paymentMethod === 'check'
   )
 
-  // === RENDER ===
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RECEIPT SCREEN
+  // ═══════════════════════════════════════════════════════════════════════════
   if (showReceiptOptions && completedOrder) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f5f5f5' }}>
         <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-            style={{ backgroundColor: '#d4edda' }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#d4edda' }}>
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="#2e7d32" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
@@ -433,16 +580,21 @@ export default function POSPage() {
           <p className="text-3xl font-bold mb-1">${completedOrder.total?.toFixed(2)}</p>
           <p className="text-gray-400 text-sm mb-2">{completedOrder.order_number}</p>
           {completedOrder.metadata?.cash_tendered && (
-            <p className="text-gray-500 text-sm mb-4">
+            <p className="text-gray-500 text-sm mb-2">
               Cash: ${parseFloat(completedOrder.metadata.cash_tendered).toFixed(2)} · Change: ${completedOrder.metadata.change_due?.toFixed(2) || '0.00'}
             </p>
           )}
-
-          <div className="space-y-3 mt-6">
+          {completedOrder.hasRestockItems && (
+            <div className="rounded-lg p-3 mb-4 text-left" style={{ backgroundColor: '#fffbeb', border: '1px solid #f59e0b' }}>
+              <p className="text-xs font-bold text-amber-700 mb-1">📦 Items on Order</p>
+              <p className="text-xs text-amber-600">Some items have been added to the restock list. Check <a href="/admin/restock" className="underline font-semibold">Admin → Restock</a> to manage fulfillment.</p>
+            </div>
+          )}
+          <div className="space-y-3 mt-4">
             <button onClick={() => printReceipt(completedOrder)}
               className="w-full py-3 rounded-xl font-bold text-sm border-2 transition-colors hover:bg-gray-50"
               style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}>
-              Print Receipt (80mm)
+              🖨 Print Receipt (80mm)
             </button>
             <div className="flex gap-2">
               <input type="email" placeholder="customer@email.com"
@@ -460,61 +612,260 @@ export default function POSPage() {
               style={{ backgroundColor: 'var(--primary)' }}>
               New Transaction
             </button>
-            <Link href="/admin" className="block text-xs text-gray-400 mt-2 hover:underline">
-              Back to Admin
-            </Link>
+            <Link href="/admin" className="block text-xs text-gray-400 mt-2 hover:underline">← Back to Admin</Link>
           </div>
         </div>
       </div>
     )
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MAIN POS LAYOUT
+  // ═══════════════════════════════════════════════════════════════════════════
   return (
     <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#f0f0f0', fontFamily: 'system-ui, sans-serif' }}>
 
-      {/* Top bar */}
-      <div className="flex items-center px-4 py-2 bg-white border-b shadow-sm flex-shrink-0" style={{ borderColor: '#e0e0e0' }}>
-        <div className="flex items-center gap-3 mr-4">
-          <span className="font-bold text-sm" style={{ color: 'var(--primary)' }}>Briar Patch POS</span>
-          <span className="text-xs text-gray-400">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+      {/* ── MODALS ─────────────────────────────────────────────────────────── */}
+
+      {/* Open Drawer Modal */}
+      {showDrawerModal === 'open' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
+            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--primary)' }}>Open Cash Drawer</h2>
+            <p className="text-sm text-gray-500 mb-5">Enter the starting cash amount in the drawer.</p>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">Starting Cash</label>
+            <div className="relative mb-5">
+              <span className="absolute left-3 top-2.5 text-gray-400">$</span>
+              <input type="number" min="0" step="0.01" placeholder="0.00" value={drawerOpeningCash}
+                onChange={e => setDrawerOpeningCash(e.target.value)}
+                className="w-full border rounded-lg pl-7 pr-3 py-2.5 text-sm font-semibold"
+                autoFocus onKeyDown={e => e.key === 'Enter' && openDrawer()} />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={openDrawer}
+                className="flex-1 py-3 rounded-xl font-bold text-white text-sm"
+                style={{ backgroundColor: 'var(--primary)' }}>Open Drawer</button>
+              <button onClick={() => setShowDrawerModal(null)}
+                className="px-5 py-3 rounded-xl font-semibold text-sm border" style={{ borderColor: '#ddd', color: '#666' }}>Cancel</button>
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* Close Drawer Modal */}
+      {showDrawerModal === 'close' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-auto py-6">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg mx-4">
+            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--primary)' }}>Close Drawer — Count Cash</h2>
+            <p className="text-xs text-gray-400 mb-5">
+              Opened {drawerSession ? new Date(drawerSession.openedAt).toLocaleString() : ''} · Starting: ${drawerSession?.openingCash?.toFixed(2) || '0.00'}
+            </p>
+
+            {/* Bills */}
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Bills</p>
+              <div className="grid grid-cols-3 gap-2">
+                {BILL_DENOMS.map(d => (
+                  <div key={d.value} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                    <span className="text-sm font-bold text-gray-600 w-10">{d.label}</span>
+                    <input type="number" min="0" step="1" placeholder="0"
+                      value={billCounts[d.value] || ''}
+                      onChange={e => setBillCounts(prev => ({ ...prev, [d.value]: parseInt(e.target.value) || 0 }))}
+                      className="w-14 border rounded px-2 py-1 text-sm text-center font-semibold"
+                      style={{ borderColor: '#ddd' }} />
+                    <span className="text-xs text-gray-400">${((billCounts[d.value] || 0) * d.value).toFixed(0)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Coins */}
+            <div className="mb-5">
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Coins</p>
+              <div className="grid grid-cols-3 gap-2">
+                {COIN_DENOMS.map(d => (
+                  <div key={d.cents} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                    <span className="text-sm font-bold text-gray-600 w-10">{d.label}</span>
+                    <input type="number" min="0" step="1" placeholder="0"
+                      value={coinCounts[d.cents] || ''}
+                      onChange={e => setCoinCounts(prev => ({ ...prev, [d.cents]: parseInt(e.target.value) || 0 }))}
+                      className="w-14 border rounded px-2 py-1 text-sm text-center font-semibold"
+                      style={{ borderColor: '#ddd' }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Totals / Variance */}
+            <div className="rounded-xl p-4 mb-5 space-y-2" style={{ backgroundColor: '#f8f8f8' }}>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Counted Cash</span>
+                <span className="font-bold">${countedCash.toFixed(2)}</span>
+              </div>
+              {closeSummary && (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Opening Cash</span>
+                    <span>${(drawerSession?.openingCash || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Cash Sales Today</span>
+                    <span>+${closeSummary.cashSales.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold border-t pt-2" style={{ borderColor: '#e5e7eb' }}>
+                    <span className="text-gray-600">Expected</span>
+                    <span>${closeSummary.expected.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-bold">
+                    <span>Variance</span>
+                    <span style={{ color: Math.abs(closeSummary.variance) < 0.01 ? '#16a34a' : closeSummary.variance < 0 ? '#dc2626' : '#c4842a' }}>
+                      {closeSummary.variance >= 0 ? '+' : ''}{closeSummary.variance.toFixed(2)}
+                      {Math.abs(closeSummary.variance) < 0.01 ? ' ✓' : ''}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              {!closeSummary ? (
+                <button onClick={prepareCloseDrawer} disabled={drawerClosing}
+                  className="flex-1 py-3 rounded-xl font-bold text-white text-sm"
+                  style={{ backgroundColor: drawerClosing ? '#9ca3af' : '#C4842A' }}>
+                  {drawerClosing ? 'Calculating...' : 'Calculate Variance'}
+                </button>
+              ) : (
+                <button onClick={closeDrawer}
+                  className="flex-1 py-3 rounded-xl font-bold text-white text-sm"
+                  style={{ backgroundColor: '#dc2626' }}>
+                  Close Drawer & Save
+                </button>
+              )}
+              <button onClick={() => { setShowDrawerModal(null); setCloseSummary(null); setBillCounts({}); setCoinCounts({}) }}
+                className="px-5 py-3 rounded-xl font-semibold text-sm border" style={{ borderColor: '#ddd', color: '#666' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Suspend Modal */}
+      {showSuspendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
+            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--primary)' }}>Suspend Transaction</h2>
+            <p className="text-sm text-gray-500 mb-5">Optionally label this transaction so you can find it easily.</p>
+            <input type="text" placeholder={`Transaction ${suspended.length + 1}`} value={suspendLabel}
+              onChange={e => setSuspendLabel(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2.5 text-sm mb-5"
+              autoFocus onKeyDown={e => e.key === 'Enter' && suspendTransaction()} />
+            <div className="flex gap-3">
+              <button onClick={suspendTransaction}
+                className="flex-1 py-3 rounded-xl font-bold text-white text-sm"
+                style={{ backgroundColor: '#C4842A' }}>
+                Suspend Transaction
+              </button>
+              <button onClick={() => { setShowSuspendModal(false); setSuspendLabel('') }}
+                className="px-5 py-3 rounded-xl font-semibold text-sm border" style={{ borderColor: '#ddd', color: '#666' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recall Modal */}
+      {showRecallModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold" style={{ color: 'var(--primary)' }}>Recall Transaction</h2>
+              <button onClick={() => setShowRecallModal(false)} className="text-gray-300 hover:text-gray-500 text-2xl">×</button>
+            </div>
+            {suspended.length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center">No suspended transactions</p>
+            ) : (
+              <div className="space-y-2">
+                {suspended.map(tx => (
+                  <button key={tx.id} onClick={() => recallTransaction(tx)}
+                    className="w-full text-left p-4 rounded-xl border hover:border-amber-400 hover:bg-amber-50 transition-colors"
+                    style={{ borderColor: '#e5e7eb' }}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-sm">{tx.label}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {tx.cart.length} item{tx.cart.length !== 1 ? 's' : ''}
+                          {tx.customer ? ` · ${tx.customer.first_name} ${tx.customer.last_name}` : ''}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold" style={{ color: 'var(--primary)' }}>
+                          ${tx.cart.reduce((s, i) => s + i.price * i.quantity * (1 - i.discount_pct / 100), 0).toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-400">{new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── TOP BAR ────────────────────────────────────────────────────────── */}
+      <div className="flex items-center px-4 py-2 bg-white border-b shadow-sm flex-shrink-0 gap-3" style={{ borderColor: '#e0e0e0' }}>
+        <span className="font-bold text-sm flex-shrink-0" style={{ color: 'var(--primary)' }}>Briar Patch POS</span>
+        <span className="text-xs text-gray-400 flex-shrink-0">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+
+        {/* Drawer status */}
+        <button
+          onClick={() => setShowDrawerModal(drawerStatus === 'closed' ? 'open' : 'close')}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors flex-shrink-0"
+          style={{
+            borderColor: drawerStatus === 'open' ? '#16a34a' : '#9ca3af',
+            color: drawerStatus === 'open' ? '#16a34a' : '#9ca3af',
+            backgroundColor: drawerStatus === 'open' ? '#f0fdf4' : '#f9fafb',
+          }}>
+          <span className={`w-2 h-2 rounded-full ${drawerStatus === 'open' ? 'bg-green-500' : 'bg-gray-400'}`} />
+          Drawer: {drawerStatus === 'open' ? 'OPEN' : 'CLOSED'}
+        </button>
+
+        {/* Suspended transactions */}
+        {suspended.length > 0 && (
+          <button onClick={() => setShowRecallModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border flex-shrink-0"
+            style={{ borderColor: '#f59e0b', color: '#92400e', backgroundColor: '#fffbeb' }}>
+            ⏸ Suspended ({suspended.length})
+          </button>
+        )}
+
         {/* UPC scan bar */}
-        <div className="flex-1 max-w-xs mx-4">
-          <input
-            ref={barcodeInputRef}
-            type="text"
-            placeholder="Scan barcode or UPC..."
-            className="w-full border rounded-lg px-3 py-1.5 text-sm"
-            style={{ borderColor: '#ddd' }}
+        <div className="flex-1 max-w-xs">
+          <input ref={barcodeInputRef} type="text" placeholder="Scan barcode or UPC..."
+            className="w-full border rounded-lg px-3 py-1.5 text-sm" style={{ borderColor: '#ddd' }}
             onKeyDown={e => {
-              if (e.key === 'Enter') {
-                lookupByUpc((e.target as HTMLInputElement).value);
-                (e.target as HTMLInputElement).value = ''
-              }
-            }}
-          />
+              if (e.key === 'Enter') { lookupByUpc((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = '' }
+            }} />
         </div>
         <div className="flex-1" />
-        <Link href="/admin" className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded border" style={{ borderColor: '#ddd' }}>
+        <Link href="/admin" className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded border flex-shrink-0" style={{ borderColor: '#ddd' }}>
           ← Admin
         </Link>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
 
-        {/* ====== LEFT: Products ====== */}
+        {/* ── LEFT: Products ─────────────────────────────────────────────── */}
         <div className="flex flex-col" style={{ width: '60%', borderRight: '1px solid #e0e0e0', backgroundColor: '#fafafa' }}>
 
           {/* Category tabs */}
           <div className="flex gap-1 px-3 pt-3 pb-0 flex-wrap">
             {BROAD_CATS.map(cat => (
-              <button key={cat.slug}
-                onClick={() => setBroadCat(cat.slug)}
+              <button key={cat.slug} onClick={() => setBroadCat(cat.slug)}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap mb-1"
-                style={{
-                  backgroundColor: broadCat === cat.slug ? 'var(--primary)' : '#e8e8e8',
-                  color: broadCat === cat.slug ? 'white' : '#555',
-                }}>
+                style={{ backgroundColor: broadCat === cat.slug ? 'var(--primary)' : '#e8e8e8', color: broadCat === cat.slug ? 'white' : '#555' }}>
                 {cat.name}
               </button>
             ))}
@@ -522,21 +873,15 @@ export default function POSPage() {
 
           {/* Search */}
           <div className="px-3 py-2">
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search products..."
+            <input ref={searchInputRef} type="text" placeholder="Search products..."
               value={productSearch}
               onChange={e => { setProductSearch(e.target.value); setProductPage(0); fetchProducts(e.target.value, 0) }}
-              onKeyDown={e => { if (e.key === 'Enter') { fetchProducts(productSearch, 0) } }}
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-white"
-              style={{ borderColor: '#ddd' }}
-            />
+              onKeyDown={e => { if (e.key === 'Enter') fetchProducts(productSearch, 0) }}
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-white" style={{ borderColor: '#ddd' }} />
           </div>
 
           {/* Product grid */}
           <div className="flex-1 overflow-y-auto px-3 pb-3">
-            {/* Results count */}
             {!loadingProducts && productTotal > 0 && (
               <div className="flex items-center justify-between mb-2 px-1">
                 <p className="text-xs text-gray-400">
@@ -545,16 +890,12 @@ export default function POSPage() {
                 </p>
                 {productTotal > PRODUCT_PAGE_SIZE && (
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => { const p = Math.max(0, productPage - 1); setProductPage(p); fetchProducts(productSearch, p) }}
+                    <button onClick={() => { const p = Math.max(0, productPage - 1); setProductPage(p); fetchProducts(productSearch, p) }}
                       disabled={productPage === 0}
                       className="px-2 py-1 rounded text-xs font-bold border disabled:opacity-30"
                       style={{ borderColor: '#ddd', color: 'var(--primary)' }}>←</button>
-                    <span className="text-xs text-gray-400 px-1">
-                      {productPage + 1} / {Math.ceil(productTotal / PRODUCT_PAGE_SIZE)}
-                    </span>
-                    <button
-                      onClick={() => { const p = Math.min(Math.ceil(productTotal / PRODUCT_PAGE_SIZE) - 1, productPage + 1); setProductPage(p); fetchProducts(productSearch, p) }}
+                    <span className="text-xs text-gray-400 px-1">{productPage + 1} / {Math.ceil(productTotal / PRODUCT_PAGE_SIZE)}</span>
+                    <button onClick={() => { const p = Math.min(Math.ceil(productTotal / PRODUCT_PAGE_SIZE) - 1, productPage + 1); setProductPage(p); fetchProducts(productSearch, p) }}
                       disabled={productPage >= Math.ceil(productTotal / PRODUCT_PAGE_SIZE) - 1}
                       className="px-2 py-1 rounded text-xs font-bold border disabled:opacity-30"
                       style={{ borderColor: '#ddd', color: 'var(--primary)' }}>→</button>
@@ -569,36 +910,34 @@ export default function POSPage() {
             ) : (
               <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
                 {products.map(p => (
-                  <button key={p.id}
-                    onClick={() => addToCart(p)}
+                  <button key={p.id} onClick={() => addToCart(p)}
                     className="bg-white rounded-xl p-3 text-left border transition-all hover:shadow-md hover:border-gray-300 active:scale-95"
                     style={{ borderColor: '#e8e8e8' }}>
                     {p.image_url && p.image_url !== 'none' ? (
                       <img src={p.image_url} alt={p.name} className="w-full h-20 object-contain rounded mb-2" />
                     ) : (
-                      <div className="w-full h-20 rounded mb-2 flex items-center justify-center text-xs text-gray-300"
-                        style={{ backgroundColor: '#f5f5f5' }}>No Image</div>
+                      <div className="w-full h-20 rounded mb-2 flex items-center justify-center text-xs text-gray-300" style={{ backgroundColor: '#f5f5f5' }}>No Image</div>
                     )}
                     <p className="text-xs font-bold leading-tight line-clamp-2 mb-1" style={{ color: '#1a1a1a' }}>{p.name}</p>
                     {p.brand && <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">{p.brand}</p>}
                     <p className="text-sm font-bold" style={{ color: 'var(--primary)' }}>${p.price?.toFixed(2)}</p>
-                    {(p.quantity || 0) <= 0 && <p className="text-xs text-red-500">Out of stock</p>}
+                    {(p.product_type === 'distributor' || !p.product_type) && p.in_stock ? (
+                      <p className="text-xs text-blue-500">Distributor stock</p>
+                    ) : (p.quantity || 0) <= 0 && p.product_type !== 'labor' ? (
+                      <p className="text-xs text-red-500">Not in store</p>
+                    ) : null}
                   </button>
                 ))}
               </div>
             )}
-
-            {/* Bottom pagination */}
             {!loadingProducts && productTotal > PRODUCT_PAGE_SIZE && (
               <div className="flex items-center justify-center gap-2 pt-3 pb-1 border-t mt-2" style={{ borderColor: '#e8e8e8' }}>
-                <button
-                  onClick={() => { const p = Math.max(0, productPage - 1); setProductPage(p); fetchProducts(productSearch, p) }}
+                <button onClick={() => { const p = Math.max(0, productPage - 1); setProductPage(p); fetchProducts(productSearch, p) }}
                   disabled={productPage === 0}
                   className="px-3 py-1.5 rounded text-xs font-bold border disabled:opacity-30"
                   style={{ borderColor: '#ddd', color: 'var(--primary)' }}>← Prev</button>
                 <span className="text-xs text-gray-500">Page {productPage + 1} of {Math.ceil(productTotal / PRODUCT_PAGE_SIZE)}</span>
-                <button
-                  onClick={() => { const p = Math.min(Math.ceil(productTotal / PRODUCT_PAGE_SIZE) - 1, productPage + 1); setProductPage(p); fetchProducts(productSearch, p) }}
+                <button onClick={() => { const p = Math.min(Math.ceil(productTotal / PRODUCT_PAGE_SIZE) - 1, productPage + 1); setProductPage(p); fetchProducts(productSearch, p) }}
                   disabled={productPage >= Math.ceil(productTotal / PRODUCT_PAGE_SIZE) - 1}
                   className="px-3 py-1.5 rounded text-xs font-bold border disabled:opacity-30"
                   style={{ borderColor: '#ddd', color: 'var(--primary)' }}>Next →</button>
@@ -607,7 +946,7 @@ export default function POSPage() {
           </div>
         </div>
 
-        {/* ====== RIGHT: Cart + Checkout ====== */}
+        {/* ── RIGHT: Cart + Checkout ─────────────────────────────────────── */}
         <div className="flex flex-col" style={{ width: '40%', backgroundColor: 'white' }}>
 
           {/* Customer bar */}
@@ -615,9 +954,7 @@ export default function POSPage() {
             {customer ? (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold" style={{ color: 'var(--primary)' }}>
-                    {customer.first_name} {customer.last_name}
-                  </p>
+                  <p className="text-sm font-bold" style={{ color: 'var(--primary)' }}>{customer.first_name} {customer.last_name}</p>
                   <p className="text-xs text-gray-400">
                     {customer.customer_groups?.name || 'No group'}
                     {customer.customer_groups?.discount_percentage ? ` · ${customer.customer_groups.discount_percentage}% discount` : ''}
@@ -627,14 +964,9 @@ export default function POSPage() {
               </div>
             ) : (
               <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search customer by name, email, phone..."
-                  value={customerSearch}
-                  onChange={e => searchCustomers(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                  style={{ borderColor: '#ddd' }}
-                />
+                <input type="text" placeholder="Search customer by name, email, phone..."
+                  value={customerSearch} onChange={e => searchCustomers(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor: '#ddd' }} />
                 {customerResults.length > 0 && (
                   <div className="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-xl z-20 mt-1 max-h-48 overflow-y-auto">
                     {customerResults.map(c => (
@@ -665,7 +997,7 @@ export default function POSPage() {
             )}
           </div>
 
-          {/* New customer quick form */}
+          {/* New customer form */}
           {showNewCustomerForm && (
             <div className="px-4 py-3 border-b" style={{ backgroundColor: '#eff6ff', borderColor: '#dbeafe' }}>
               <p className="text-xs font-bold text-blue-700 mb-2">New Customer</p>
@@ -710,41 +1042,64 @@ export default function POSPage() {
               <div>
                 {cart.map(item => {
                   const lineTotal = item.price * item.quantity * (1 - item.discount_pct / 100)
+                  const needsFulfillment = item.fulfillment !== 'in_store'
                   return (
-                    <div key={item.product_id} className="px-4 py-3 border-b flex items-start gap-3" style={{ borderColor: '#f0f0f0' }}>
-                      {item.image_url && item.image_url !== 'none' ? (
-                        <img src={item.image_url} alt={item.name} className="w-10 h-10 object-contain rounded flex-shrink-0" />
-                      ) : (
-                        <div className="w-10 h-10 rounded flex-shrink-0" style={{ backgroundColor: '#f0f0f0' }} />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold leading-tight truncate">{item.name}</p>
-                        <p className="text-xs text-gray-400">${item.price.toFixed(2)} each</p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          {/* Qty controls */}
-                          <button onClick={() => updateCartQty(item.product_id, item.quantity - 1)}
-                            className="w-6 h-6 rounded-full border flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-100">-</button>
-                          <span className="text-sm font-bold w-5 text-center">{item.quantity}</span>
-                          <button onClick={() => updateCartQty(item.product_id, item.quantity + 1)}
-                            className="w-6 h-6 rounded-full border flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-100">+</button>
-                          {/* Discount */}
-                          <div className="flex items-center gap-1 ml-2">
-                            <input type="number" min="0" max="100" step="5" value={item.discount_pct || ''}
-                              onChange={e => updateLineDiscount(item.product_id, parseFloat(e.target.value) || 0)}
-                              placeholder="0"
-                              className="w-12 border rounded px-1 py-0.5 text-xs text-center"
-                              style={{ borderColor: item.discount_pct > 0 ? 'var(--secondary)' : '#ddd' }} />
-                            <span className="text-xs text-gray-400">%</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-sm font-bold" style={{ color: 'var(--primary)' }}>${lineTotal.toFixed(2)}</p>
-                        {item.discount_pct > 0 && (
-                          <p className="text-xs text-green-600">-{item.discount_pct}%</p>
+                    <div key={item.product_id} className="px-4 py-3 border-b" style={{ borderColor: needsFulfillment ? '#fef3c7' : '#f0f0f0', backgroundColor: needsFulfillment ? '#fffbeb' : 'white' }}>
+                      <div className="flex items-start gap-3">
+                        {item.image_url && item.image_url !== 'none' ? (
+                          <img src={item.image_url} alt={item.name} className="w-10 h-10 object-contain rounded flex-shrink-0" />
+                        ) : (
+                          <div className="w-10 h-10 rounded flex-shrink-0" style={{ backgroundColor: '#f0f0f0' }} />
                         )}
-                        <button onClick={() => removeFromCart(item.product_id)}
-                          className="text-xs text-gray-300 hover:text-red-400 mt-1">remove</button>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold leading-tight truncate">{item.name}</p>
+                          <p className="text-xs text-gray-400">${item.price.toFixed(2)} each</p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <button onClick={() => updateCartQty(item.product_id, item.quantity - 1)}
+                              className="w-6 h-6 rounded-full border flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-100">-</button>
+                            <span className="text-sm font-bold w-5 text-center">{item.quantity}</span>
+                            <button onClick={() => updateCartQty(item.product_id, item.quantity + 1)}
+                              className="w-6 h-6 rounded-full border flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-100">+</button>
+                            <div className="flex items-center gap-1 ml-2">
+                              <input type="number" min="0" max="100" step="5" value={item.discount_pct || ''}
+                                onChange={e => updateLineDiscount(item.product_id, parseFloat(e.target.value) || 0)}
+                                placeholder="0"
+                                className="w-12 border rounded px-1 py-0.5 text-xs text-center"
+                                style={{ borderColor: item.discount_pct > 0 ? 'var(--secondary)' : '#ddd' }} />
+                              <span className="text-xs text-gray-400">%</span>
+                            </div>
+                          </div>
+
+                          {/* Fulfillment selector for OOS items */}
+                          {needsFulfillment && (
+                            <div className="mt-2 flex gap-1">
+                              <button onClick={() => updateFulfillment(item.product_id, 'store_order')}
+                                className="px-2 py-1 rounded text-xs font-semibold border transition-colors"
+                                style={{
+                                  backgroundColor: item.fulfillment === 'store_order' ? '#92400e' : 'white',
+                                  color: item.fulfillment === 'store_order' ? 'white' : '#92400e',
+                                  borderColor: '#92400e',
+                                }}>
+                                📋 Order/Pickup
+                              </button>
+                              <button onClick={() => updateFulfillment(item.product_id, 'dropship')}
+                                className="px-2 py-1 rounded text-xs font-semibold border transition-colors"
+                                style={{
+                                  backgroundColor: item.fulfillment === 'dropship' ? '#1d4ed8' : 'white',
+                                  color: item.fulfillment === 'dropship' ? 'white' : '#1d4ed8',
+                                  borderColor: '#1d4ed8',
+                                }}>
+                                🚚 Dropship
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-sm font-bold" style={{ color: 'var(--primary)' }}>${lineTotal.toFixed(2)}</p>
+                          {item.discount_pct > 0 && <p className="text-xs text-green-600">-{item.discount_pct}%</p>}
+                          <button onClick={() => removeFromCart(item.product_id)}
+                            className="text-xs text-gray-300 hover:text-red-400 mt-1">remove</button>
+                        </div>
                       </div>
                     </div>
                   )
@@ -753,9 +1108,45 @@ export default function POSPage() {
             )}
           </div>
 
+          {/* Dropship address (shown if any dropship items) */}
+          {hasDropship && (
+            <div className="px-4 py-3 border-t" style={{ borderColor: '#dbeafe', backgroundColor: '#eff6ff' }}>
+              <p className="text-xs font-bold text-blue-700 mb-2">🚚 Dropship Address</p>
+              <div className="grid grid-cols-2 gap-2">
+                <input type="text" placeholder="Recipient name" value={dropshipAddress.name}
+                  onChange={e => setDropshipAddress({ ...dropshipAddress, name: e.target.value })}
+                  className="col-span-2 border rounded px-2 py-1.5 text-xs" />
+                <input type="text" placeholder="Street address" value={dropshipAddress.street}
+                  onChange={e => setDropshipAddress({ ...dropshipAddress, street: e.target.value })}
+                  className="col-span-2 border rounded px-2 py-1.5 text-xs" />
+                <input type="text" placeholder="City" value={dropshipAddress.city}
+                  onChange={e => setDropshipAddress({ ...dropshipAddress, city: e.target.value })}
+                  className="border rounded px-2 py-1.5 text-xs" />
+                <div className="flex gap-2">
+                  <input type="text" placeholder="State" value={dropshipAddress.state} maxLength={2}
+                    onChange={e => setDropshipAddress({ ...dropshipAddress, state: e.target.value.toUpperCase() })}
+                    className="border rounded px-2 py-1.5 text-xs w-14" />
+                  <input type="text" placeholder="ZIP" value={dropshipAddress.zip}
+                    onChange={e => setDropshipAddress({ ...dropshipAddress, zip: e.target.value })}
+                    className="border rounded px-2 py-1.5 text-xs flex-1" />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Totals + Payment */}
           {cart.length > 0 && (
             <div className="border-t flex-shrink-0" style={{ borderColor: '#e0e0e0' }}>
+
+              {/* Suspend button */}
+              <div className="px-4 py-2 flex justify-end border-b" style={{ borderColor: '#f0f0f0' }}>
+                <button onClick={() => setShowSuspendModal(true)}
+                  className="text-xs font-semibold px-3 py-1.5 rounded border transition-colors hover:bg-amber-50"
+                  style={{ borderColor: '#f59e0b', color: '#92400e' }}>
+                  ⏸ Suspend
+                </button>
+              </div>
+
               {/* Order discount */}
               <div className="px-4 py-2 flex items-center gap-2 border-b" style={{ borderColor: '#f0f0f0' }}>
                 <span className="text-xs text-gray-500 font-semibold">Order Discount:</span>
@@ -765,9 +1156,7 @@ export default function POSPage() {
                   className="w-16 border rounded px-2 py-1 text-xs text-center"
                   style={{ borderColor: orderDiscount > 0 ? 'var(--secondary)' : '#ddd' }} />
                 <span className="text-xs text-gray-400">%</span>
-                {orderDiscount > 0 && (
-                  <span className="text-xs text-green-600 ml-auto">-${orderDiscountAmount.toFixed(2)}</span>
-                )}
+                {orderDiscount > 0 && <span className="text-xs text-green-600 ml-auto">-${orderDiscountAmount.toFixed(2)}</span>}
               </div>
 
               {/* Totals */}
@@ -786,14 +1175,16 @@ export default function POSPage() {
                 <div className="flex justify-between text-sm font-bold" style={{ color: 'var(--primary)' }}>
                   <span>Total</span><span>${total.toFixed(2)}</span>
                 </div>
+                {oosCartItems.length > 0 && (
+                  <p className="text-xs text-amber-600">⚠ {oosCartItems.length} item{oosCartItems.length !== 1 ? 's' : ''} on order/dropship</p>
+                )}
               </div>
 
               {/* Payment method */}
-              <div className="px-4 pb-2">
+              <div className="px-4 pb-3">
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   {(['cash', 'card', 'check'] as PaymentMethod[]).map(method => (
-                    <button key={method!}
-                      onClick={() => setPaymentMethod(method)}
+                    <button key={method!} onClick={() => setPaymentMethod(method)}
                       className="py-2 rounded-lg text-sm font-bold capitalize transition-all"
                       style={{
                         backgroundColor: paymentMethod === method ? 'var(--primary)' : '#f0f0f0',
@@ -805,27 +1196,21 @@ export default function POSPage() {
                   ))}
                 </div>
 
-                {/* Cash input */}
                 {paymentMethod === 'cash' && (
                   <div className="mb-3">
                     <div className="flex gap-2 mb-1">
                       <input type="number" min="0" step="0.01" placeholder="Cash tendered"
-                        value={cashTendered}
-                        onChange={e => setCashTendered(e.target.value)}
+                        value={cashTendered} onChange={e => setCashTendered(e.target.value)}
                         className="flex-1 border rounded-lg px-3 py-2 text-sm font-semibold"
-                        style={{ borderColor: '#ddd' }}
-                        autoFocus />
+                        style={{ borderColor: '#ddd' }} autoFocus />
                     </div>
-                    {/* Quick amounts */}
                     <div className="grid grid-cols-4 gap-1 mb-2">
                       {[Math.ceil(total), Math.ceil(total / 5) * 5, Math.ceil(total / 10) * 10, Math.ceil(total / 20) * 20]
                         .filter((v, i, arr) => arr.indexOf(v) === i).slice(0, 4)
                         .map(amt => (
                           <button key={amt} onClick={() => setCashTendered(String(amt))}
                             className="py-1.5 rounded text-xs font-bold border transition-colors hover:bg-gray-50"
-                            style={{ borderColor: '#ddd' }}>
-                            ${amt}
-                          </button>
+                            style={{ borderColor: '#ddd' }}>${amt}</button>
                         ))}
                     </div>
                     {cashTendered && parseFloat(cashTendered) >= total && (
@@ -836,53 +1221,36 @@ export default function POSPage() {
                   </div>
                 )}
 
-                {/* Card / Terminal status */}
                 {paymentMethod === 'card' && terminalStatus !== 'idle' && (
                   <div className="mb-3 p-3 rounded-lg text-center text-sm font-semibold"
                     style={{
                       backgroundColor: terminalStatus === 'approved' ? '#d4edda' : terminalStatus === 'error' ? '#f8d7da' : '#e3f2fd',
                       color: terminalStatus === 'approved' ? '#2e7d32' : terminalStatus === 'error' ? '#c62828' : '#1565c0',
                     }}>
-                    {terminalStatus === 'connecting' && '⟳ '}
-                    {terminalStatus === 'waiting' && '⌛ '}
-                    {terminalStatus === 'processing' && '⟳ '}
-                    {terminalStatus === 'approved' && '✓ '}
-                    {terminalStatus === 'error' && '✕ '}
+                    {terminalStatus === 'connecting' && '⟳ '}{terminalStatus === 'waiting' && '⌛ '}
+                    {terminalStatus === 'processing' && '⟳ '}{terminalStatus === 'approved' && '✓ '}{terminalStatus === 'error' && '✕ '}
                     {terminalMessage}
                   </div>
                 )}
 
-                {/* Check number */}
                 {paymentMethod === 'check' && (
                   <div className="mb-3">
                     <input type="text" placeholder="Check number (optional)"
-                      value={checkNumber}
-                      onChange={e => setCheckNumber(e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2 text-sm"
-                      style={{ borderColor: '#ddd' }} />
+                      value={checkNumber} onChange={e => setCheckNumber(e.target.value)}
+                      className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor: '#ddd' }} />
                   </div>
                 )}
 
-                {/* Charge button */}
                 <button
-                  onClick={
-                    paymentMethod === 'card' ? processCardPayment :
-                    paymentMethod === 'cash' ? completeCashPayment :
-                    completeCheckPayment
-                  }
+                  onClick={paymentMethod === 'card' ? processCardPayment : paymentMethod === 'cash' ? completeCashPayment : completeCheckPayment}
                   disabled={!canCompletePayment || processingPayment}
                   className="w-full py-3 rounded-xl font-bold text-base text-white transition-all"
-                  style={{
-                    backgroundColor: !canCompletePayment ? '#9ca3af' : processingPayment ? '#9ca3af' : 'var(--primary)',
-                    fontSize: '1rem',
-                  }}>
-                  {processingPayment
-                    ? 'Processing...'
+                  style={{ backgroundColor: !canCompletePayment ? '#9ca3af' : processingPayment ? '#9ca3af' : 'var(--primary)' }}>
+                  {processingPayment ? 'Processing...'
                     : paymentMethod === 'card' ? `Charge $${total.toFixed(2)}`
                     : paymentMethod === 'cash' ? `Collect $${total.toFixed(2)}`
                     : paymentMethod === 'check' ? `Accept Check $${total.toFixed(2)}`
-                    : `Select Payment Method`
-                  }
+                    : 'Select Payment Method'}
                 </button>
               </div>
             </div>

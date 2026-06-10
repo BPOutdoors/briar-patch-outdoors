@@ -16,6 +16,7 @@ const navItems = [
   { label: 'Hero Banners', href: '/admin/banners' },
   { label: 'Payouts', href: '/admin/payouts' },
   { label: 'Promotions', href: '/admin/sales' },
+  { label: 'Restock', href: '/admin/restock' },
   { label: 'Tax Nexus', href: '/admin/tax-nexus' },
   { label: 'Integrations', href: '/admin/integrations' },
   { label: 'Settings', href: '/admin/settings' },

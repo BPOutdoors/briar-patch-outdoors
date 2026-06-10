@@ -118,7 +118,7 @@ function ShopContent() {
 
     let query = supabase
       .from('products')
-      .select('id, name, brand, display_price, map_price, msrp, image_url, in_stock, quantity, broad_category, website_category, website_subcategory, category_name, product_group_name', { count: 'exact' })
+      .select('id, name, brand, display_price, map_price, msrp, image_url, in_stock, quantity, broad_category, website_category, website_subcategory, category_name, product_group_name, product_type', { count: 'exact' })
       .eq('visible', true)
       .eq('requires_ffl', false)
       .range(from, to)
@@ -488,10 +488,18 @@ function ShopContent() {
                               Sale — {Math.round(((price - salePrice!) / price) * 100)}% off
                             </span>
                           )}
-                          {product.quantity > 0 ? null : product.in_stock ? (
-                            <span className="text-xs px-2 py-1 font-semibold bg-blue-700 text-white rounded">Ships from Distributor</span>
+                          {product.product_type === 'manual' ? (
+                            // Manual products: track local quantity
+                            (product.quantity ?? 0) <= 0 ? (
+                              <span className="text-xs px-2 py-1 font-semibold bg-gray-800 text-white rounded">Out of Stock</span>
+                            ) : null
                           ) : (
-                            <span className="text-xs px-2 py-1 font-semibold bg-gray-800 text-white rounded">Out of Stock</span>
+                            // Distributor products: use in_stock flag
+                            product.in_stock ? (
+                              <span className="text-xs px-2 py-1 font-semibold bg-blue-700 text-white rounded">Ships from Distributor</span>
+                            ) : (
+                              <span className="text-xs px-2 py-1 font-semibold bg-gray-800 text-white rounded">Out of Stock</span>
+                            )
                           )}
                         </div>
                         <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-200">
@@ -523,7 +531,7 @@ function ShopContent() {
                               </p>
                             )}
                           </div>
-                          {product.in_stock && product.quantity > 0 && product.quantity <= 5 && (
+                          {product.product_type === 'manual' && product.quantity > 0 && product.quantity <= 5 && (
                             <span className="text-xs font-semibold text-red-500">Only {product.quantity} left</span>
                           )}
                         </div>
