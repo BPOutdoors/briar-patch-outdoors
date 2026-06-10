@@ -193,10 +193,10 @@ function LowMarginReport() {
                     <td className="px-4 py-3 font-semibold">
                       {isEditing ? (
                         <div className="flex items-center gap-1">
-                          <input type="number" step="0.01" value={editPrice.value} autoFocus
+                          <input type="number" step="0.01" value={editPrice?.value ?? ''} autoFocus
                             onChange={e => setEditPrice({ id: product.id, value: e.target.value })}
                             className="border rounded px-2 py-1 text-xs w-20" />
-                          <button onClick={() => savePrice(product.id, editPrice.value)}
+                          <button onClick={() => savePrice(product.id, editPrice?.value ?? '')}
                             disabled={updating === product.id}
                             className="px-2 py-1 rounded text-xs font-bold text-white"
                             style={{ backgroundColor: 'var(--secondary)' }}>
