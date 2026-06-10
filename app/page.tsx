@@ -5,7 +5,7 @@ const categories = [
   {
     name: 'Archery',
     description: 'Bows, arrows, accessories & more',
-    image: 'https://images.unsplash.com/photo-1555597673-b21d5c935865?w=600&q=80',
+    image:'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=600&q=80',
     href: '/products?category=archery',
   },
   {
