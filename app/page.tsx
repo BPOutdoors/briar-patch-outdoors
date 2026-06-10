@@ -1,5 +1,6 @@
-import Image from 'next/image'
 import Link from 'next/link'
+import Nav from './components/Nav'
+import Footer from './components/Footer'
 
 const categories = [
   {
@@ -32,29 +33,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--cream)' }}>
 
-      {/* Navigation */}
-      <nav style={{ backgroundColor: '#C4A882', color: '#2C2C2C' }} className="px-6 py-4 shadow-md">
-        <div className="max-w-screen-2xl mx-auto flex justify-between items-center">
-          <Link href="/">
-            <Image src="/logo.png" alt="Briar Patch Outdoors" width={220} height={80} className="object-contain" />
-          </Link>
-          <div className="hidden md:flex gap-8 text-sm font-semibold uppercase tracking-wide">
-            <Link href="/products" className="hover:text-amber-800 transition-colors">Shop</Link>
-            <Link href="/products?category=archery" className="hover:text-amber-800 transition-colors">Archery</Link>
-            <Link href="/products?category=hunting" className="hover:text-amber-800 transition-colors">Hunting</Link>
-            <Link href="/products?category=camping" className="hover:text-amber-800 transition-colors">Camping</Link>
-            <Link href="/about" className="hover:text-amber-800 transition-colors">About Us</Link>
-            <Link href="/contact" className="hover:text-amber-800 transition-colors">Contact</Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/cart" className="hover:text-amber-800 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Nav />
 
       {/* Hero Banner */}
       <div className="relative h-[580px] overflow-hidden">
@@ -157,36 +136,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer style={{ backgroundColor: 'var(--secondary-dark)', color: 'white' }} className="py-10 mt-8">
-        <div className="max-w-screen-2xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <Image src="/logo.png" alt="Briar Patch Outdoors" width={160} height={60} className="object-contain mb-4" />
-            <p className="text-sm text-stone-300 leading-relaxed">Your local outdoor outfitter — hunting, archery, camping & more.</p>
-          </div>
-          <div>
-            <h4 className="font-bold text-lg mb-3 text-white">Quick Links</h4>
-            <ul className="space-y-2 text-sm text-stone-300">
-              <li><Link href="/products" className="hover:text-white transition-colors">Shop All</Link></li>
-              <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-bold text-lg mb-3 text-white">Visit Us</h4>
-            <p className="text-sm text-stone-300 leading-relaxed">
-              Come see us in store for bow tuning,<br />
-              gear fitting, and expert advice.<br /><br />
-              <a href="mailto:services@briarpatchoutdoors.com" className="hover:text-white transition-colors">
-                services@briarpatchoutdoors.com
-              </a>
-            </p>
-          </div>
-        </div>
-        <div className="text-center text-green-300 text-xs mt-8">
-          &copy; {new Date().getFullYear()} Briar Patch Outdoors. All rights reserved.
-        </div>
-      </footer>
+      <Footer />
 
     </div>
   )
