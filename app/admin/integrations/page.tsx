@@ -5,10 +5,16 @@ import { useState } from 'react'
 export default function IntegrationsPage() {
   const [syncingFull, setSyncingFull] = useState(false)
   const [syncingInventory, setSyncingInventory] = useState(false)
+  const [syncingCategories, setSyncingCategories] = useState(false)
+  const [syncingImages, setSyncingImages] = useState(false)
   const [fullResult, setFullResult] = useState<any>(null)
   const [inventoryResult, setInventoryResult] = useState<any>(null)
+  const [categoriesResult, setCategoriesResult] = useState<any>(null)
+  const [imagesResult, setImagesResult] = useState<any>(null)
+  const [imageStatus, setImageStatus] = useState<any>(null)
   const [lastFullSync, setLastFullSync] = useState<string | null>(null)
   const [lastInventorySync, setLastInventorySync] = useState<string | null>(null)
+  const [lastCategoriesSync, setLastCategoriesSync] = useState<string | null>(null)
 
   async function triggerFullSync() {
     setSyncingFull(true)
@@ -28,6 +34,106 @@ export default function IntegrationsPage() {
       setFullResult({ success: false, error: error.message })
     }
     setSyncingFull(false)
+  }
+
+  async function checkImageStatus() {
+    const response = await fetch('/api/sync/images', {
+      headers: { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SYNC_SECRET_KEY}` },
+    })
+    const result = await response.json()
+    setImageStatus(result)
+  }
+
+  async function triggerImageSync() {
+    setSyncingImages(true)
+    setImagesResult(null)
+    try {
+      const response = await fetch('/api/sync/images', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SYNC_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      const result = await response.json()
+      setImagesResult(result)
+      checkImageStatus()
+    } catch (error: any) {
+      setImagesResult({ success: false, error: error.message })
+    }
+    setSyncingImages(false)
+  }
+
+  async function triggerAutoImageSync() {
+    setSyncingImages(true)
+    setImagesResult(null)
+    let totalDownloaded = 0
+    let totalNotFound = 0
+    let totalErrors = 0
+    let remaining = 0
+    let batches = 0
+
+    try {
+      while (true) {
+        const response = await fetch('/api/sync/images', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SYNC_SECRET_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        const result = await response.json()
+        if (!result.success) throw new Error(result.error)
+
+        totalDownloaded += result.downloaded
+        totalNotFound += result.notFound
+        totalErrors += result.errors
+        remaining = result.remainingWithoutImages
+        batches++
+
+        // Update display after each batch
+        setImagesResult({
+          success: true,
+          downloaded: totalDownloaded,
+          notFound: totalNotFound,
+          errors: totalErrors,
+          remainingWithoutImages: remaining,
+          batches,
+          keepRunning: result.keepRunning,
+          autoRunning: result.keepRunning,
+        })
+
+        if (!result.keepRunning) break
+
+        // Small pause between batches to avoid overwhelming FTP
+        await new Promise(r => setTimeout(r, 1000))
+      }
+    } catch (error: any) {
+      setImagesResult((prev: any) => ({ ...prev, error: error.message, autoRunning: false }))
+    }
+
+    checkImageStatus()
+    setSyncingImages(false)
+  }
+
+  async function triggerCategoriesSync() {
+    setSyncingCategories(true)
+    setCategoriesResult(null)
+    try {
+      const response = await fetch('/api/sync/categories', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SYNC_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      const result = await response.json()
+      setCategoriesResult(result)
+      setLastCategoriesSync(new Date().toLocaleString())
+    } catch (error: any) {
+      setCategoriesResult({ success: false, error: error.message })
+    }
+    setSyncingCategories(false)
   }
 
   async function triggerInventorySync() {
@@ -218,6 +324,171 @@ export default function IntegrationsPage() {
               <div>
                 <p className="font-bold text-red-800 mb-1">✗ Sync Failed</p>
                 <p className="text-sm text-red-600">{fullResult.error}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Kinsey's — Category Names Sync */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: 'var(--primary)' }}>
+              Kinsey&apos;s — Category Names Sync
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Downloads the category lookup file from Kinsey&apos;s FTP and maps all products to human-readable category names.
+            </p>
+          </div>
+          <span className="px-3 py-1 rounded-full text-xs font-bold"
+            style={{ backgroundColor: '#e6f4ea', color: '#2e7d32' }}>
+            ✓ Connected
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 p-4 rounded-lg"
+          style={{ backgroundColor: 'var(--cream-dark)' }}>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Source</p>
+            <p className="text-sm font-semibold">Kinsey&apos;s FTP</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">What it updates</p>
+            <p className="text-sm font-semibold">Category &amp; group names on all products</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Last Run</p>
+            <p className="text-sm font-semibold">{lastCategoriesSync || 'Run manually as needed'}</p>
+          </div>
+        </div>
+
+        <button
+          onClick={triggerCategoriesSync}
+          disabled={syncingCategories}
+          className="px-6 py-3 rounded font-bold text-white transition-colors"
+          style={{ backgroundColor: syncingCategories ? '#9ca3af' : '#5c6bc0' }}
+        >
+          {syncingCategories ? '⏳ Syncing Categories...' : '🏷️ Sync Category Names Now'}
+        </button>
+
+        {categoriesResult && (
+          <div className={`mt-4 p-4 rounded-lg ${categoriesResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+            {categoriesResult.success ? (
+              <div>
+                <p className="font-bold text-green-800 mb-2">✓ Categories Synced!</p>
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <p className="text-gray-500">Categories</p>
+                    <p className="font-bold text-green-700">{categoriesResult.categoriesFound}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Groups</p>
+                    <p className="font-bold text-green-700">{categoriesResult.groupsFound}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Products Updated</p>
+                    <p className="font-bold text-green-700">{categoriesResult.productsUpdated?.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="font-bold text-red-800 mb-1">✗ Sync Failed</p>
+                <p className="text-sm text-red-600">{categoriesResult.error}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Kinsey's — Image Sync */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: 'var(--primary)' }}>
+              Kinsey&apos;s — Product Image Sync
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Downloads product images from Kinsey&apos;s FTP and stores them in Supabase. Runs in batches of 50 — click multiple times to continue syncing.
+            </p>
+          </div>
+          <span className="px-3 py-1 rounded-full text-xs font-bold"
+            style={{ backgroundColor: '#e6f4ea', color: '#2e7d32' }}>
+            ✓ Connected
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 p-4 rounded-lg"
+          style={{ backgroundColor: 'var(--cream-dark)' }}>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Source</p>
+            <p className="text-sm font-semibold">Kinsey&apos;s FTP · 1024×1024 Images</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">With Images</p>
+            <p className="text-sm font-semibold text-green-700">{imageStatus ? imageStatus.withImages?.toLocaleString() : '—'}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Still Needed</p>
+            <p className="text-sm font-semibold text-orange-600">{imageStatus ? imageStatus.withoutImages?.toLocaleString() : '—'}</p>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mb-4 flex-wrap">
+          <button
+            onClick={triggerAutoImageSync}
+            disabled={syncingImages}
+            className="px-6 py-3 rounded font-bold text-white transition-colors"
+            style={{ backgroundColor: syncingImages ? '#9ca3af' : '#b45309' }}
+          >
+            {syncingImages ? '⏳ Auto-Syncing All Images...' : '🖼️ Auto-Sync All Images'}
+          </button>
+          <button
+            onClick={triggerImageSync}
+            disabled={syncingImages}
+            className="px-4 py-3 rounded font-semibold border text-sm transition-colors hover:bg-gray-50"
+            style={{ borderColor: '#b45309', color: '#b45309' }}
+          >
+            Sync Next 50 Only
+          </button>
+          <button
+            onClick={checkImageStatus}
+            className="px-4 py-3 rounded font-semibold border text-sm transition-colors hover:bg-gray-50"
+            style={{ borderColor: '#ddd', color: '#666' }}
+          >
+            Check Status
+          </button>
+        </div>
+
+        {imagesResult && (
+          <div className={`p-4 rounded-lg ${imagesResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+            {imagesResult.success ? (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <p className="font-bold text-green-800">
+                    {imagesResult.autoRunning ? '⏳ Auto-sync in progress...' : '✓ Sync Complete'}
+                  </p>
+                  {imagesResult.batches > 1 && (
+                    <span className="text-xs text-gray-500">{imagesResult.batches} batches run</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  <div><p className="text-gray-500">Downloaded</p><p className="font-bold text-green-700">{imagesResult.downloaded?.toLocaleString()}</p></div>
+                  <div><p className="text-gray-500">Not on FTP</p><p className="font-bold text-gray-600">{imagesResult.notFound?.toLocaleString()}</p></div>
+                  <div><p className="text-gray-500">Errors</p><p className="font-bold" style={{ color: imagesResult.errors > 0 ? '#dc2626' : '#2e7d32' }}>{imagesResult.errors}</p></div>
+                  <div><p className="text-gray-500">Still Remaining</p><p className="font-bold text-orange-600">{imagesResult.remainingWithoutImages?.toLocaleString()}</p></div>
+                </div>
+                {!imagesResult.autoRunning && !imagesResult.keepRunning && (
+                  <p className="text-xs text-green-600 mt-2 font-semibold">
+                    ✓ All available images have been synced!
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div>
+                <p className="font-bold text-red-800 mb-1">✗ Sync Failed</p>
+                <p className="text-sm text-red-600">{imagesResult.error}</p>
               </div>
             )}
           </div>

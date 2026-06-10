@@ -14,6 +14,22 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
 
 const ALL_STATUSES = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
 
+function DropshipShipForm({ orderId, onShipped }: { orderId: string; onShipped: (id: string, tracking: string) => void }) {
+  const [tracking, setTracking] = useState('')
+  return (
+    <div className="flex items-center gap-2">
+      <input type="text" placeholder="Tracking # (optional)" value={tracking}
+        onChange={e => setTracking(e.target.value)}
+        className="border rounded px-2 py-1.5 text-xs w-40" />
+      <button onClick={() => onShipped(orderId, tracking)}
+        className="px-3 py-1.5 rounded text-xs font-bold text-white"
+        style={{ backgroundColor: '#15803d' }}>
+        Mark Shipped
+      </button>
+    </div>
+  )
+}
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -28,6 +44,10 @@ export default function OrdersPage() {
   const [noteText, setNoteText] = useState('')
   const [trackingInput, setTrackingInput] = useState('')
   const [message, setMessage] = useState('')
+  const [activeTab, setActiveTab] = useState<'orders' | 'dropship'>('orders')
+  const [dropshipOrders, setDropshipOrders] = useState<any[]>([])
+  const [loadingDropship, setLoadingDropship] = useState(false)
+  const [submittingDropship, setSubmittingDropship] = useState<string | null>(null)
   const pageSize = 25
 
   const fetchOrders = useCallback(async (pageNum = 0, searchTerm = search) => {
@@ -75,6 +95,44 @@ export default function OrdersPage() {
   useEffect(() => {
     fetchOrders(currentPage)
   }, [currentPage, statusFilter, dateFilter])
+
+  useEffect(() => {
+    if (activeTab === 'dropship') fetchDropshipOrders()
+  }, [activeTab])
+
+  async function fetchDropshipOrders() {
+    setLoadingDropship(true)
+    const { data } = await supabase
+      .from('orders')
+      .select('*, order_items(product_name, quantity, unit_price, kinsey_sku, is_dropship)')
+      .eq('requires_dropship', true)
+      .order('created_at', { ascending: false })
+    setDropshipOrders(data || [])
+    setLoadingDropship(false)
+  }
+
+  async function markDropshipSubmitted(orderId: string) {
+    setSubmittingDropship(orderId)
+    await supabase.from('orders').update({
+      dropship_status: 'submitted',
+      status: 'processing',
+      updated_at: new Date().toISOString(),
+    }).eq('id', orderId)
+    fetchDropshipOrders()
+    setSubmittingDropship(null)
+    showMessage('Marked as submitted to Kinsey\'s')
+  }
+
+  async function markDropshipShipped(orderId: string, tracking: string) {
+    await supabase.from('orders').update({
+      dropship_status: 'shipped',
+      status: 'shipped',
+      tracking_number: tracking || null,
+      updated_at: new Date().toISOString(),
+    }).eq('id', orderId)
+    fetchDropshipOrders()
+    showMessage('Order marked as shipped')
+  }
 
   async function updateStatus(orderId: string, newStatus: string) {
     setUpdatingStatus(true)
@@ -139,6 +197,138 @@ export default function OrdersPage() {
         </div>
       )}
 
+      {/* Main Tabs */}
+      <div className="flex gap-1 mb-5 border-b" style={{ borderColor: '#e5e7eb' }}>
+        {[
+          { key: 'orders', label: 'All Orders' },
+          { key: 'dropship', label: `Dropship Queue${dropshipOrders.filter(o => o.dropship_status === 'pending').length > 0 ? ` (${dropshipOrders.filter(o => o.dropship_status === 'pending').length})` : ''}` },
+        ].map(tab => (
+          <button key={tab.key} onClick={() => setActiveTab(tab.key as any)}
+            className="px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px"
+            style={{
+              borderColor: activeTab === tab.key ? 'var(--primary)' : 'transparent',
+              color: activeTab === tab.key ? 'var(--primary)' : '#888',
+            }}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Dropship Queue */}
+      {activeTab === 'dropship' && (
+        <div>
+          {loadingDropship ? (
+            <div className="p-8 text-center text-gray-400">Loading...</div>
+          ) : dropshipOrders.length === 0 ? (
+            <div className="p-12 text-center bg-white rounded-xl border">
+              <p className="text-gray-500 font-medium">No dropship orders</p>
+              <p className="text-gray-400 text-sm mt-1">Orders with out-of-stock items will appear here</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {dropshipOrders.map(order => {
+                const dropshipItems = order.order_items?.filter((i: any) => i.is_dropship) || order.order_items || []
+                const isPending = order.dropship_status === 'pending'
+                const isSubmitted = order.dropship_status === 'submitted'
+                const isShipped = order.dropship_status === 'shipped'
+                return (
+                  <div key={order.id} className="bg-white rounded-xl border overflow-hidden"
+                    style={{ borderColor: isPending ? '#fde68a' : isSubmitted ? '#bfdbfe' : '#bbf7d0' }}>
+                    <div className="flex items-center justify-between px-5 py-3 border-b"
+                      style={{ backgroundColor: isPending ? '#fffbeb' : isSubmitted ? '#eff6ff' : '#f0fdf4', borderColor: 'inherit' }}>
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-sm" style={{ color: 'var(--primary)' }}>{order.order_number}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                          style={{
+                            backgroundColor: isPending ? '#fef3c7' : isSubmitted ? '#dbeafe' : '#dcfce7',
+                            color: isPending ? '#b45309' : isSubmitted ? '#1d4ed8' : '#15803d',
+                          }}>
+                          {isPending ? 'Needs Submission' : isSubmitted ? 'Submitted to Kinsey\'s' : 'Shipped'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-400">{new Date(order.created_at).toLocaleDateString()}</div>
+                    </div>
+                    <div className="p-5">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                          <p className="text-xs font-bold text-gray-400 uppercase mb-1">Customer</p>
+                          <p className="text-sm font-semibold">{order.customer_name || 'Guest'}</p>
+                          <p className="text-xs text-gray-400">{order.customer_email}</p>
+                          {order.customer_phone && <p className="text-xs text-gray-400">{order.customer_phone}</p>}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-400 uppercase mb-1">Ship To</p>
+                          {order.shipping_address ? (() => {
+                            try {
+                              const addr = typeof order.shipping_address === 'string' ? JSON.parse(order.shipping_address) : order.shipping_address
+                              return <p className="text-xs text-gray-600">{addr.address}<br />{addr.city}, {addr.state} {addr.zip}</p>
+                            } catch { return <p className="text-xs text-gray-400">—</p> }
+                          })() : <p className="text-xs text-gray-400">Local Pickup</p>}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-400 uppercase mb-1">Order Total</p>
+                          <p className="text-sm font-bold" style={{ color: 'var(--primary)' }}>${order.total?.toFixed(2)}</p>
+                        </div>
+                      </div>
+
+                      {/* Dropship Items */}
+                      <div className="border rounded-lg overflow-hidden mb-4">
+                        <div className="px-3 py-2 text-xs font-bold text-gray-500 uppercase" style={{ backgroundColor: '#fafafa' }}>
+                          Items to Dropship
+                        </div>
+                        {dropshipItems.map((item: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between px-3 py-2 border-t text-sm">
+                            <div>
+                              <p className="font-medium">{item.product_name}</p>
+                              {item.kinsey_sku && <p className="text-xs text-gray-400">SKU: {item.kinsey_sku}</p>}
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold">Qty: {item.quantity}</p>
+                              <p className="text-xs text-gray-400">${item.unit_price?.toFixed(2)} each</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        {isPending && (
+                          <>
+                            <a href="https://www.kinseysinc.com" target="_blank" rel="noopener noreferrer"
+                              className="px-4 py-2 rounded-lg text-sm font-bold text-white"
+                              style={{ backgroundColor: '#1565c0' }}>
+                              Open Kinsey's Portal →
+                            </a>
+                            <button onClick={() => markDropshipSubmitted(order.id)}
+                              disabled={submittingDropship === order.id}
+                              className="px-4 py-2 rounded-lg text-sm font-bold text-white"
+                              style={{ backgroundColor: submittingDropship === order.id ? '#9ca3af' : 'var(--secondary)' }}>
+                              Mark as Submitted
+                            </button>
+                          </>
+                        )}
+                        {isSubmitted && (
+                          <DropshipShipForm orderId={order.id} onShipped={markDropshipShipped} />
+                        )}
+                        {isShipped && order.tracking_number && (
+                          <a href={`https://www.google.com/search?q=${encodeURIComponent(order.tracking_number)}`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="text-xs font-semibold text-blue-600 hover:underline">
+                            Track: {order.tracking_number} →
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'orders' && (
+        <div>
       {/* Status Tabs */}
       <div className="flex flex-wrap gap-2 mb-4">
         {ALL_STATUSES.map(s => (
@@ -293,6 +483,8 @@ export default function OrdersPage() {
           </div>
         </div>
       )}
+        </div>
+      ) /* end activeTab === 'orders' */}
 
       {/* Order Detail Modal */}
       {selectedOrder && (

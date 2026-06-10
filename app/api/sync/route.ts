@@ -65,6 +65,16 @@ export async function POST(request: Request) {
       const productRecords = batch.map((product: any) => {
         const sku = product.NorthItemNumber || product.SouthItemNumber
         const inv = inventoryMap.get(sku)
+        const name = (product.Name || `${product.Description1 || ''} ${product.Description2 || ''}`.trim()).toLowerCase()
+
+        // Auto-detect FFL-required items
+        // Ammo check runs FIRST — ammo never requires FFL even if name contains firearm words
+        const isAmmo = ['ammunition', 'ammo', ' rounds', 'centerfire', 'rimfire'].some(k => name.includes(k))
+        const isFirearm = !isAmmo && [
+          'firearm', 'pistol', 'revolver', 'rifle', 'shotgun', 'handgun',
+          'carbine', 'muzzleloader', 'suppressor', 'silencer',
+        ].some(keyword => name.includes(keyword))
+        const requiresFfl = isFirearm
 
         return {
           kinsey_sku: sku,
@@ -72,12 +82,19 @@ export async function POST(request: Request) {
           description: product.ExtendedText || product.BulletFeatures || null,
           brand: product.Brand || null,
           category: product.ItemCategoryCode || null,
+          product_group_code: product.ProductGroupCode || null,
+          product_sub_group_1: product.ProductSubGroup1 || null,
+          product_sub_group_2: product.ProductSubGroup2 || null,
+          image_url: product.ImageURL || product.ImageUrl || product.Image || null,
           upc: product.BarCode || null,
           cost: inv?.price ? parseFloat(inv.price) : null,
           msrp: product.MSRP ? parseFloat(product.MSRP) : null,
           map_price: product.MAPPrice ? parseFloat(product.MAPPrice) : (inv?.map ? parseFloat(inv.map) : null),
           quantity: inv?.quantityOnHand ? Math.floor(inv.quantityOnHand) : 0,
           in_stock: inv?.quantityOnHand ? inv.quantityOnHand > 0 : false,
+          requires_ffl: requiresFfl,
+          // Only set visible=false for FFL items — don't override manual visibility changes on existing products
+          ...(requiresFfl ? { visible: false } : {}),
           updated_at: new Date().toISOString(),
         }
       })
