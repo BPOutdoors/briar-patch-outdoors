@@ -1,0 +1,3302 @@
+{
+  "components": {
+    "schemas": {
+      "AddToSalesOrderRequest": {
+        "required": [
+          "salesLines"
+        ],
+        "type": "object",
+        "properties": {
+          "salesLines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalesOrderLineRequest"
+            },
+            "description": "Create an array of sales lines to add"
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "AllowedProductResponse": {
+        "type": "object",
+        "properties": {
+          "recordsCount": {
+            "type": "integer",
+            "description": "The total number of products returned in the query.",
+            "format": "int32",
+            "example": 3
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "An array of all products that can be purchased via API",
+            "nullable": true,
+            "example": [
+              "1001019",
+              "1001026",
+              "1001087"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "description": "The list of products that can be purchases via API. More products may be available by contacting your rep."
+      },
+      "ErrorMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The message returned from the server indicating any issues.",
+            "nullable": true,
+            "example": "Something went wrong"
+          },
+          "referenceNo": {
+            "type": "string",
+            "description": "The reference number for error tracking purposes.",
+            "nullable": true,
+            "example": "7b494943-7478-4b0e-be34-39ca-8762cdf1"
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "ExampleProductResponse": {
+        "type": "object",
+        "properties": {
+          "NorthItemNumber": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "1001019"
+          },
+          "SouthItemNumber": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "1001019"
+          },
+          "Description1": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "Easton 5mm Axis Sport Arrows"
+          },
+          "Description2": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "600 2 in. Bully Vanes 6 pk."
+          },
+          "Brand": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "Easton"
+          },
+          "VendorItemNumber": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "828458"
+          },
+          "MSRP": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "86.99"
+          },
+          "MAPPrice": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "71.99"
+          },
+          "BarCode": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "723560284580"
+          },
+          "RHLH": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": null
+          },
+          "Color1": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "Black"
+          },
+          "Color2": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "Grey"
+          },
+          "Size": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "600"
+          },
+          "ProductLength": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "33.5"
+          },
+          "ProductWidth": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "3.5"
+          },
+          "ProductHeight": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "1.5"
+          },
+          "Weight": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "0.5"
+          },
+          "BulletFeatures": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "High penetration 5mm;For shorter draw length and lower poundage bows;Compatible with all Axis accessory components"
+          },
+          "ExtendedText": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "High penetration 5mm Axis SPT carbon arrows..."
+          },
+          "CountryOfOrigin": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "United States (US)"
+          },
+          "Flammable": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": null
+          },
+          "Hazardous": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": null
+          },
+          "DateCreated": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "10/4/2018"
+          },
+          "ItemCategoryCode": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "1000"
+          },
+          "ProductGroupCode": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "1000A"
+          },
+          "ProductSubGroup1": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "1000A1"
+          },
+          "ProductSubGroup2": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "1000A1B"
+          },
+          "PackSize": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "6"
+          },
+          "Inactive": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "No"
+          },
+          "Blocked": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "No"
+          },
+          "Name": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "Easton 5mm Axis Sport Arrows 600 2 in. Bully Vanes 6 pk."
+          },
+          "IncludeExcludeGroup": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": null
+          },
+          "Prop65Applies": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": null
+          },
+          "Prop65CancerHarm": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": null
+          },
+          "Prop65ReproductiveHarm": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": null
+          },
+          "Prop65Chemical": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": null
+          },
+          "ProhibitedStates": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "None"
+          },
+          "ParentChildSKU": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "PARENT1001018"
+          },
+          "ParentChildOption1": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "600"
+          },
+          "ParentChildOption2": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": null
+          },
+          "ParentChildOption3": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": null
+          },
+          "ParentChildOption4": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": null
+          },
+          "NAVInventoryPostingGroup": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "KAP"
+          },
+          "UnitPrice": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "71.99"
+          },
+          "CanBeDropShipped": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "Yes"
+          }
+        },
+        "additionalProperties": false,
+        "description": "The attributes here may change from time to time depending upon products being carried. \r\nTypically attributes are added, not subtracted."
+      },
+      "FFLRequest": {
+        "type": "object",
+        "properties": {
+          "licenseNumber": {
+            "type": "string",
+            "nullable": true,
+            "example": "3-42-789-06-6G-02056"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "example": "Han Solo"
+          },
+          "company": {
+            "type": "string",
+            "nullable": true,
+            "example": "Kessel Run Supplies"
+          },
+          "address1": {
+            "type": "string",
+            "nullable": true,
+            "example": "113 Falcon Ave"
+          },
+          "address2": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "city": {
+            "type": "string",
+            "nullable": true,
+            "example": "Mos Eisley"
+          },
+          "state": {
+            "type": "string",
+            "nullable": true,
+            "example": "Tatooine"
+          },
+          "zip": {
+            "type": "string",
+            "nullable": true,
+            "example": "12345-1234"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "example": "630-555-9540"
+          },
+          "licenseImage": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "expires": {
+            "type": "string",
+            "description": "A date in the format of yyyy-MM-dd",
+            "format": "date-time",
+            "example": "2026-08-01"
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "Package": {
+        "type": "object",
+        "properties": {
+          "salesOrderNo": {
+            "type": "string",
+            "description": "The sales order number associated with the package.",
+            "nullable": true,
+            "example": "S1744979"
+          },
+          "purchaseOrderNo": {
+            "type": "string",
+            "description": "The purchase order number associated with the package.",
+            "nullable": true,
+            "example": "PO12345"
+          },
+          "packageNo": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "P821734"
+          },
+          "dateShipped": {
+            "type": "string",
+            "description": "",
+            "format": "date-time",
+            "example": "2024-12-19T13:04:17.91Z"
+          },
+          "carrierCode": {
+            "type": "string",
+            "description": "The shipping provider code",
+            "nullable": true,
+            "example": "USPS"
+          },
+          "serviceCode": {
+            "type": "string",
+            "description": "The shipping service.",
+            "nullable": true,
+            "example": "FIRST-PARCEL"
+          },
+          "trackingNo": {
+            "type": "string",
+            "description": "The tracking number for the package.",
+            "nullable": true,
+            "example": "9400116901056351940653"
+          },
+          "Products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PackageItem"
+            },
+            "description": "An array of products associated with each package.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "PackageItem": {
+        "type": "object",
+        "properties": {
+          "ProductID": {
+            "type": "string",
+            "description": "The product numbers in each package.",
+            "nullable": true,
+            "example": "66529"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "The quantity of products with the above product numbers in the package.",
+            "format": "float",
+            "example": 1
+          },
+          "serialNo": {
+            "type": "string",
+            "description": "The Serial Number of the Product, if applicable.",
+            "nullable": true,
+            "example": "SN123"
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "PartnerInventoryItem": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "The unique product ID of the product.",
+            "nullable": true,
+            "example": "10113"
+          },
+          "customerId": {
+            "type": "string",
+            "description": "A custom product ID provided by the dealer, if one is on file with Kinsey’s.",
+            "nullable": true,
+            "example": ""
+          },
+          "manufacturerId": {
+            "type": "string",
+            "description": "The product number provided by the manufacturer.",
+            "nullable": true,
+            "example": "10113"
+          },
+          "upc": {
+            "type": "string",
+            "description": "The UPC/barcode assigned to this product by the manufacturer.",
+            "nullable": true,
+            "example": "810173019774"
+          },
+          "price": {
+            "type": "number",
+            "description": "The current cost to the dealer to purchase this product.",
+            "format": "double",
+            "example": 3.26
+          },
+          "map": {
+            "type": "number",
+            "description": "The Minimum Advertised Price set by the vendor.",
+            "format": "double",
+            "example": 0
+          },
+          "quantityOnHand": {
+            "type": "number",
+            "description": "The total amount of available inventory for the product.",
+            "format": "double",
+            "example": 507
+          },
+          "RestockETA": {
+            "type": "string",
+            "description": "The estimated timeline before additional stock is acquired, if applicable.",
+            "nullable": true,
+            "example": ""
+          },
+          "Warehouses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WarehouseInventoryRecord"
+            },
+            "description": "A list of warehouses and inventory levels.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "PartnerInventoryResponse": {
+        "type": "object",
+        "properties": {
+          "recordsCount": {
+            "type": "integer",
+            "description": "The total number of products returned in the query.",
+            "format": "int32",
+            "readOnly": true
+          },
+          "Products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartnerInventoryItem"
+            },
+            "description": "An array of all products",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "SalesOrderLineRequest": {
+        "required": [
+          "productId",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The Product ID of the product to add to the order.",
+            "example": "1404385"
+          },
+          "description": {
+            "type": "string",
+            "description": "(optional) Setting this overwrites the default item description on the sales line",
+            "nullable": true,
+            "example": "Dakotas Toys with 36\" Feathers"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "The quantity of the products to add to the order.",
+            "format": "double",
+            "example": 35
+          },
+          "customPrice": {
+            "type": "number",
+            "description": "Dealer's price to show on customer packing slip. Typically used by dropship dealers to show what the customer paid and not what the dealer paid.",
+            "format": "double"
+          },
+          "comment": {
+            "type": "string",
+            "description": "A comment to add to each specific product in the array.",
+            "nullable": true,
+            "example": "This is for an event"
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "SalesOrderLineResponse": {
+        "type": "object",
+        "properties": {
+          "productID": {
+            "type": "string",
+            "description": "The product ID of the product.",
+            "nullable": true,
+            "example": "1404385"
+          },
+          "qtyOrd": {
+            "type": "number",
+            "description": "The quantity ordered of the product.",
+            "format": "double",
+            "example": 35
+          },
+          "qtyRes": {
+            "type": "number",
+            "description": "The quantity reserved of the product.",
+            "format": "double",
+            "example": 0
+          },
+          "qtyBO": {
+            "type": "number",
+            "description": "The amount of this product on backorder.",
+            "format": "double",
+            "example": 35
+          },
+          "price": {
+            "type": "number",
+            "description": "The price of the product.",
+            "format": "double",
+            "example": 134.06
+          },
+          "status": {
+            "type": "integer",
+            "description": "The status of the order modification; refer to the key page for more details.",
+            "format": "int32",
+            "example": 7200
+          },
+          "message": {
+            "type": "string",
+            "description": "A plain text error message shown when the status does not equal 7200.",
+            "nullable": true,
+            "example": ""
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "SalesOrderOptions": {
+        "type": "object",
+        "properties": {
+          "backOrdersAllowed": {
+            "type": "boolean",
+            "description": "True/False. Enables backordering if products when there is insufficient quantity available."
+          },
+          "splitOrdersAllowed": {
+            "type": "boolean",
+            "description": "True/False. Allows the system to create multiple sales orders when there is insufficient inventory in the primary warehouse."
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "SalesOrderRequest": {
+        "required": [
+          "salesLines",
+          "shipTo"
+        ],
+        "type": "object",
+        "properties": {
+          "purchaseOrderNo": {
+            "type": "string",
+            "description": "The dealer provided purchase order number. Limited to 20 characters.",
+            "nullable": true,
+            "example": "MyPOnumber"
+          },
+          "shippingCarrier": {
+            "type": "string",
+            "description": "The requested shipping carrier ie: FEDEX, UPS, USPS, ect… This field will only be utilized if your \r\n            account is a non-flat rate account.Please reference the Shipping Carrier table in the Additional Information section for\r\n            more information",
+            "nullable": true,
+            "example": "FEDEX"
+          },
+          "shippingService": {
+            "type": "string",
+            "description": "The requested shipping service for the respective carrier, ie: Ground, 2 Day Air, ect… This field will only be\r\n            utilized if your account is a non-flat rate account.Please reference the Shipping Services By Carrier section in the\r\n            Additional Information section for more information. Limited to 10 characters.",
+            "nullable": true,
+            "example": "FREIGHT_ECONOMY"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Creates a note on the sales order, rather than the individual sales lines.",
+            "nullable": true,
+            "example": "This is a header comment"
+          },
+          "primaryWarehouse": {
+            "type": "string",
+            "description": "The warehouse favored by the dealer. Only utilized if the dealer is not on the flat rate shipping program.",
+            "nullable": true,
+            "example": "WH1679"
+          },
+          "options": {
+            "$ref": "#/components/schemas/SalesOrderOptions"
+          },
+          "shipTo": {
+            "$ref": "#/components/schemas/ShipToRequest"
+          },
+          "fflInfo": {
+            "$ref": "#/components/schemas/FFLRequest"
+          },
+          "salesLines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalesOrderLineRequest"
+            },
+            "description": "An array of all products in the sales order. At least one valid product must be sent with the sales order."
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "SalesOrderResponse": {
+        "type": "object",
+        "properties": {
+          "salesOrderNo": {
+            "type": "string",
+            "description": "The modified sales order number.",
+            "nullable": true,
+            "example": "S1664090"
+          },
+          "purchaseOrderNo": {
+            "type": "string",
+            "description": "The corresponding purchase order for the sales order.",
+            "nullable": true,
+            "example": "TEST4"
+          },
+          "warehouse": {
+            "type": "string",
+            "description": "",
+            "nullable": true,
+            "example": "WH1679"
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the updated order.",
+            "nullable": true,
+            "example": "Open"
+          },
+          "orderLines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalesOrderLineResponse"
+            },
+            "description": "An array of products in the order",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "SalesOrderResult": {
+        "type": "object",
+        "properties": {
+          "referenceNo": {
+            "type": "string",
+            "description": "The reference number associated with the request.",
+            "nullable": true,
+            "example": "f90b18b2-f208-4af3-8255-055781e1c6a1"
+          },
+          "message": {
+            "type": "string",
+            "description": "The message returned from the server if applicable.",
+            "nullable": true,
+            "example": ""
+          },
+          "salesOrders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalesOrderResponse"
+            },
+            "description": "",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "SalesOrderStatusResponse": {
+        "type": "object",
+        "properties": {
+          "salesOrderNo": {
+            "type": "string",
+            "description": "Returns the sales order ID",
+            "nullable": true,
+            "example": "W286648"
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the sales order. The various statuses are: NotValid, Open, Pending, PartiallyShipped, and Complete",
+            "nullable": true,
+            "example": "Complete"
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "ShipToOptions": {
+        "type": "object",
+        "properties": {
+          "adultSignature": {
+            "type": "boolean",
+            "description": "Used to specify \"Adult Signature Required\" on UPS options."
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "ShipToRequest": {
+        "required": [
+          "address",
+          "city",
+          "country"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name on the shipment. API will reject anything above 100 characters and will trim to 35 characters",
+            "nullable": true,
+            "example": "Luke Skywalker"
+          },
+          "address": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Address line one for the shipment. Limited to 100 characters.",
+            "example": "1660 Walker Road"
+          },
+          "address2": {
+            "type": "string",
+            "description": "Address line two for the shipment. Limited to 50 characters",
+            "nullable": true,
+            "example": "Apartment 2"
+          },
+          "city": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The city of the shipping address. Limited to 30 characters",
+            "example": "Tatooine"
+          },
+          "state": {
+            "type": "string",
+            "description": "The state of the shipping address. Limited to 2 characters if shipping to US, limited to 20 for all other countries. Required if shipping to the US.",
+            "nullable": true,
+            "example": "AZ"
+          },
+          "zipCode": {
+            "type": "string",
+            "description": "The zip code of the shipping address. Limited to 20 characters. Required if shipping to the US.",
+            "nullable": true,
+            "example": "12345-1234"
+          },
+          "country": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The country of the shipping address. Must be a 2 character ISO code.",
+            "example": "US"
+          },
+          "phone": {
+            "type": "string",
+            "description": "The phone number of the end recipient.",
+            "nullable": true,
+            "example": "5055554455"
+          },
+          "options": {
+            "$ref": "#/components/schemas/ShipToOptions"
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "ShipmentResponse": {
+        "type": "object",
+        "properties": {
+          "purchaseOrderNo": {
+            "type": "string",
+            "description": "The purchase order number of the shipment from the query parameter.",
+            "nullable": true,
+            "example": "PO12345"
+          },
+          "startDateTime": {
+            "type": "string",
+            "description": "The start date from your query.",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2024-10-24T00:49:55Z"
+          },
+          "endDateTime": {
+            "type": "string",
+            "description": "The end date from your query.",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2024-10-25T00:49:57Z"
+          },
+          "recordsCount": {
+            "type": "integer",
+            "description": "The number of records returned.",
+            "format": "int32",
+            "readOnly": true,
+            "example": 1
+          },
+          "packages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Package"
+            },
+            "description": "An array of packages returned from the query",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "WarehouseInventoryRecord": {
+        "type": "object",
+        "properties": {
+          "warehouseID": {
+            "type": "string",
+            "description": "The warehouse ID corresponds to a physical warehouse. Please reference the Valid Warehouse Locations in the Additional Information section for more information",
+            "nullable": true,
+            "example": "WH1679"
+          },
+          "quantityOnHand": {
+            "type": "number",
+            "description": "The inventory count specifically for the designated warehouse.",
+            "format": "double",
+            "example": 507
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      }
+    }
+  },
+  "default": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Kinsey's: Customer API",
+      "description": "\r\n<sub>_Document was last generated on 2026-06-05._</sub>\r\n\r\n# Base URL\r\nThe base URL for all API requests is `https://api.kinseysinc.com/v2/`.\r\n\r\n# Authentication\r\nKinsey's will assign a unique ID (API Identifier) to each dealer, which should be included with every query for authentication\r\npurposes.\r\n\r\n# Headers\r\nAll headers will be consistent across every endpoint, unless otherwise specified. JSON is the only accepted content type at this\r\ntime.\r\n- `Content-Type` Application/JSON\r\n- `X-API-KEY` Your API key, obtained from Kinsey's\r\n- `Kinsey-Source` (optional) Used by integrators to identify where the request is coming from. For example, Shopify, BigCommerce, Custom, etc. This informational field helps with troubleshooting.\r\n\r\n# Error handling\r\nAll API endpoints use the following error codes unless otherwise specified:\r\n- `400 Bad Request`: The request was malformed or missing required parameters.\r\n- `403 Forbidden`: The provided API key was invalid or missing.\r\n- `404 Not Found`: The requested resource was not found.\r\n- `405 Method Not Allowed`: The method is not allowed, and it could be triggered by a bad query.\r\n- `500 Internal Server Error`: An unexpected error occurred on the server\r\n\r\n# Additional Information\r\n\r\n## Status Codes\r\n| Codes | Status | Message | \r\n| ----- | ------ | ------- | \r\n| 7200 | Good | No error, everything is working properly. |\r\n| 7202 | Error | Internal Error - Product cannot be reserved. |\r\n| 7203 | Error | Internal Error - Product cannot be reserved. |\r\n| 7204 | Error | Internal Error - Sales Line Comment could not be written. |\r\n| 7250 | Error | Not enough quantity remains to fulfill requested quantity. Reduced quantity from X to Y. |\r\n| 7404 | Warning | Product is not a valid Product. |\r\n| 7405 | Warning | Product is out of stock and cannot be backordered. |\r\n| 7406 | Warning | Product is discontinued and cannot be backordered. |\r\n| 7409 | Warning | Product is restricted from purchase by this customer. |\r\n| 7410 | Warning | Product cannot be added to the same sales order as long guns or other accessories. |\r\n| 7450 | Warning | Product is discontinued and not enough quantity remains to fulfill requested quantity. |\r\n| 7455 | Warning | Product is out of stock and cannot be backordered. |\r\n| 7500 | Error | Internal Error - Unknown. |\r\n| 7501 | Error | Internal Error - Sales Line Not Written. |\r\n\r\n## Valid Warehouse Locations\r\n| API Warehouse Response | Physical Location | \r\n| ---------------------- | ----------------- |\r\n| WH1658 | 1658 Steel Way Mount Joy, PA 17552 |\r\n| WH1679 | 1679 Steel Way Mount Joy, PA 17552 |\r\n| WH250 | 250 Terry Blvd Louisville, KY 40229 |\r\n\r\n## Valid Shipping Carriers\r\n| APICarrierCode | Description |\r\n| -- | -- |\r\n| UPS | United Parcel Service |\r\n| FEDEX | FedEx |\r\n| USPS | United States Postal Service |\r\n\r\n## Shipping Services by Carrier\r\n\r\n### Shipping services for UPS\r\n| APIServiceCode | Description |\r\n| -- | -- |\r\n| GROUND  | UPS Ground |\r\n| EXPRESS  | UPS Express |\r\n| EXPRESS_PLUS  | UPS Express Plus |\r\n| 2ND_DAY_AIR_A | .M. UPS 2nd Day Air A.M. |\r\n| 2ND_DAY_AIR  | UPS 2nd Day Air |\r\n| NEXT_DAY_AIR_SAVER  | UPS Next Day Air Saver |\r\n| NEXT_DAY_AIR  | UPS Next Day Air |\r\n| NEXT_DAY_AIR_EARLY  | UPS Next Day Air Early |\r\n| 3_DAY_SELECT  | UPS 3 Day Select Air |\r\n| GFP  | UPS Ground with Freight Pricing |\r\n| 2ND_DAY_AIR_PR  | UPS 2nd Day Air Puerto Rico |\r\n| SAVER_CANADA  | UPS Canadian Economy |\r\n| STANDARD  | UPS Standard Canada |\r\n| EXPEDITED_CANADA  | UPS Expedited Canada |\r\n| NEXT_DAY_AIR_PR  | UPS Next Day Air Puerto Rico |\r\n| GROUND_PR  | UPS Ground Puerto Rico |\r\n\r\n### Shipping services for FedEx\r\n| APIServiceCode | Description |\r\n| -- | -- |\r\n| 2_DAY_AM | FedEx 2 Day Delivery by 10:30AM |\r\n| 2_DAY | FedEx 2 Day Delivery |\r\n| 1_DAY_FREIGHT | FedEx 1 Day Freight (Palletized) |\r\n| 2_DAY_FREIGHT | FedEx 2 Day Freight (Palletized) |\r\n| 3_DAY_FREIGHT | FedEx 3 Day Freight (Palletized) |\r\n| EXPRESS_SAVER | FedEx Express Saver 3 Day |\r\n| FIRST_OVERNIGHT | FedEx First Overnight |\r\n| FIRST_FREIGHT | FedEx First Overnight Freight |\r\n| FREIGHT_ECONOMY | FedEx Freight Economy |\r\n| FREIGHT_PRIORITY | FedEx Freight Priority |\r\n| GROUND | FedEx Ground |\r\n| GROUND_HOME_DELIVERY | FedEx Ground Home Delivery ($4 Surcharge) |\r\n| PRIORITY_OVERNIGHT | FedEx Priority Overnight |\r\n| SMART_POST | FedEx Smart Post |\r\n| STANDARD_OVERNIGHT | FedEx Standard Overnight |\r\n| INTERNATIONAL_PRIORITY_FREIGHT | FedEx International Priority Freight |\r\n| INTERNATIONAL_ECONOMY | FedEx International Economy |\r\n| INTERNATIONAL_ECONOMY_FREIGHT | FedEx International Economy Freight |\r\n| INTERNATIONAL_FIRST | FedEx International First Class |\r\n| INTERNATIONAL_PRIORITY | FedEx International Priority |\r\n| INTERNATIONAL_GROUND | FedEx International Ground |\r\n\r\n### Shipping services for USPS\r\n| APIServiceCode | Description |\r\n| -- | -- |\r\n| GROUND-ADVANTAGE | USPS Ground Advantage (under 2 lbs) |\r\n| EXPRESS-PARCEL | USPS Priority Mail Express Parcel |\r\n| FIRST-PARCEL | USPS First Class Mail Parcel |\r\n| PRIORITY-PARCEL | USPS Priority Mail Parcel |",
+      "contact": {
+        "email": "api-info@Kinseysinc.com"
+      },
+      "version": "v2.5.1"
+    },
+    "paths": {
+      "/Inventory": {
+        "get": {
+          "tags": [
+            "Inventory"
+          ],
+          "summary": "Gets inventory information for products",
+          "parameters": [
+            {
+              "name": "products",
+              "in": "query",
+              "description": "(optional): Filter by product ID, with each product separated by commas. \r\n            A maximum of 2000 characters is allowed for this value, including the commas.\r\n            If this parameter is omitted then all products available for sale to the dealer will be returned (very large file).",
+              "schema": {
+                "type": "string"
+              },
+              "example": "10113,10116"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PartnerInventoryResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "406": {
+              "description": "Not Acceptable",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/Products": {
+        "get": {
+          "tags": [
+            "Products"
+          ],
+          "summary": "Get product file",
+          "description": "\r\nProvides a comprehensive and detailed catalog of all the products currently carried by Kinsey’s. \r\n            Depending on a dealers approval status with the manufacturer not all products may actually be available for purchase by individual dealers.\r\n\r\n​\r\n\r\nThe response is a JSON object containing an extensive set of fields related to the current catalog of products for sale. \r\n            The attributes contained within this file may change from time to time depending upon products being carried. \r\n            Typically attributes are added, not subtracted.",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ExampleProductResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "406": {
+              "description": "Not Acceptable",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/Products/GetById": {
+        "get": {
+          "tags": [
+            "Products"
+          ],
+          "summary": "Get by ids",
+          "description": "\r\nProvides a detailed catalog of the requested products currently carried by Kinsey’s. \r\n            Depending on a dealers approval status with the manufacturer not all products may actually be available for purchase by individual dealers.\r\n\r\n​\r\n\r\nThe response is a JSON object containing an extensive set of fields related to the requested products for sale.\r\n            The attributes contained within this file may change from time to time depending upon products being carried. \r\n            Typically attributes are added, not subtracted.",
+          "parameters": [
+            {
+              "name": "products",
+              "in": "query",
+              "description": "Filter by product ID, with each product separated by commas.",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ExampleProductResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "406": {
+              "description": "Not Acceptable",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/Products/download": {
+        "get": {
+          "tags": [
+            "Products"
+          ],
+          "summary": "Download product file",
+          "description": "\r\nReturns the entire output of the `/Products` endpoint as a JSON file.\r\n\r\n​\r\n\r\nUpon completion, the server will return a successful status, initiating an automatic download of the JSON file to your computer. \r\n            The response will be the same as the `/Products` call with the exception that data will be returned in the form of a file rather than as text in the API response.",
+          "responses": {
+            "200": {
+              "description": "OK"
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "406": {
+              "description": "Not Acceptable",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/Products/Allowed": {
+        "get": {
+          "tags": [
+            "Products"
+          ],
+          "summary": "Gets a list of all purchaseable products via API",
+          "description": "This is a limited list of allowed products. It may be more restrictive than placing an order over the phone - please contact your rep with any questions.",
+          "parameters": [
+            {
+              "name": "products",
+              "in": "query",
+              "description": "(optional): Filter by product ID, with each product separated by commas. \r\n            A maximum of 2000 characters is allowed for this value, including the commas.\r\n            If this parameter is omitted then all allowed products will be returned.",
+              "schema": {
+                "type": "string"
+              },
+              "example": "10113,10116"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AllowedProductResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/SalesOrder": {
+        "post": {
+          "tags": [
+            "SalesOrder"
+          ],
+          "summary": "Create a sales order",
+          "description": "Adds a new sales order to the system. All parameters for this end point are supplied in the body.",
+          "requestBody": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SalesOrderResult"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/SalesOrder/{salesOrderNo}": {
+        "patch": {
+          "tags": [
+            "SalesOrder"
+          ],
+          "summary": "Add lines to existing order",
+          "description": "Modify an existing sales order. \r\n**Note that lines can only be added if the order has not been released to the warehouse for processing.**",
+          "parameters": [
+            {
+              "name": "salesOrderNo",
+              "in": "path",
+              "description": "The existing sales order id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "example": "S1664090"
+            }
+          ],
+          "requestBody": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddToSalesOrderRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddToSalesOrderRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddToSalesOrderRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SalesOrderResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "delete": {
+          "tags": [
+            "SalesOrder"
+          ],
+          "summary": "Delete a pending sales order",
+          "description": "This endpoint is used to delete a pending sales order. \r\n**Note that orders can only be deleted if the order has not been released to the warehouse for picking.**",
+          "parameters": [
+            {
+              "name": "salesOrderNo",
+              "in": "path",
+              "description": "The order number of the sale.",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "example": "S1664090"
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "No Content"
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "423": {
+              "description": "Locked",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "tags": [
+            "SalesOrder"
+          ],
+          "summary": "Get the status of an order",
+          "description": "This endpoint retrieves the status of a provided sales order",
+          "parameters": [
+            {
+              "name": "salesOrderNo",
+              "in": "path",
+              "description": "The order number for the sale. This is the order number assigned by Kinsey’s, not the dealer assigned Purchase Order Number.",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "example": "W286648"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SalesOrderStatusResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/Shipments/{purchaseOrderNo}": {
+        "get": {
+          "tags": [
+            "Shipments"
+          ],
+          "summary": "Retrieve shipping details of package(s) based on purchase order number or a date range.",
+          "description": "\r\nIf you submit both a purchase order number and a date range as parameters then the date range will be ignored.\r\n\r\n​\r\n\r\nIf both startDate and endDate are set, they cannot be more than 5 days apart.\r\n\r\nIf endDate is not supplied, endDate defaults to 2 hours from given startDate.\r\n\r\n​\r\n\r\nDates must be formatted in ISO 8601, UTC `YYYY-MM-DDTHH:mm:ssZ`.",
+          "parameters": [
+            {
+              "name": "purchaseOrderNo",
+              "in": "path",
+              "description": "The order number for the sale. Limited to 20 characters. Must be URI encoded.",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "example": "PO12345"
+            },
+            {
+              "name": "startDate",
+              "in": "query",
+              "description": "The start date for searching shipping information.",
+              "schema": {
+                "type": "string"
+              },
+              "example": "=2024-10-24T00:49:55Z"
+            },
+            {
+              "name": "endDate",
+              "in": "query",
+              "description": "The end date for your search. No more than 5 days after the start date.",
+              "schema": {
+                "type": "string"
+              },
+              "example": "2024-10-25T00:49:57Z"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ShipmentResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Forbidden",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "AddToSalesOrderRequest": {
+          "required": [
+            "salesLines"
+          ],
+          "type": "object",
+          "properties": {
+            "salesLines": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/SalesOrderLineRequest"
+              },
+              "description": "Create an array of sales lines to add"
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "AllowedProductResponse": {
+          "type": "object",
+          "properties": {
+            "recordsCount": {
+              "type": "integer",
+              "description": "The total number of products returned in the query.",
+              "format": "int32",
+              "example": 3
+            },
+            "products": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "An array of all products that can be purchased via API",
+              "nullable": true,
+              "example": [
+                "1001019",
+                "1001026",
+                "1001087"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "description": "The list of products that can be purchases via API. More products may be available by contacting your rep."
+        },
+        "ErrorMessage": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "The message returned from the server indicating any issues.",
+              "nullable": true,
+              "example": "Something went wrong"
+            },
+            "referenceNo": {
+              "type": "string",
+              "description": "The reference number for error tracking purposes.",
+              "nullable": true,
+              "example": "7b494943-7478-4b0e-be34-39ca-8762cdf1"
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "ExampleProductResponse": {
+          "type": "object",
+          "properties": {
+            "NorthItemNumber": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "1001019"
+            },
+            "SouthItemNumber": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "1001019"
+            },
+            "Description1": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "Easton 5mm Axis Sport Arrows"
+            },
+            "Description2": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "600 2 in. Bully Vanes 6 pk."
+            },
+            "Brand": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "Easton"
+            },
+            "VendorItemNumber": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "828458"
+            },
+            "MSRP": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "86.99"
+            },
+            "MAPPrice": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "71.99"
+            },
+            "BarCode": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "723560284580"
+            },
+            "RHLH": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": null
+            },
+            "Color1": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "Black"
+            },
+            "Color2": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "Grey"
+            },
+            "Size": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "600"
+            },
+            "ProductLength": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "33.5"
+            },
+            "ProductWidth": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "3.5"
+            },
+            "ProductHeight": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "1.5"
+            },
+            "Weight": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "0.5"
+            },
+            "BulletFeatures": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "High penetration 5mm;For shorter draw length and lower poundage bows;Compatible with all Axis accessory components"
+            },
+            "ExtendedText": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "High penetration 5mm Axis SPT carbon arrows..."
+            },
+            "CountryOfOrigin": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "United States (US)"
+            },
+            "Flammable": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": null
+            },
+            "Hazardous": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": null
+            },
+            "DateCreated": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "10/4/2018"
+            },
+            "ItemCategoryCode": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "1000"
+            },
+            "ProductGroupCode": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "1000A"
+            },
+            "ProductSubGroup1": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "1000A1"
+            },
+            "ProductSubGroup2": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "1000A1B"
+            },
+            "PackSize": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "6"
+            },
+            "Inactive": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "No"
+            },
+            "Blocked": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "No"
+            },
+            "Name": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "Easton 5mm Axis Sport Arrows 600 2 in. Bully Vanes 6 pk."
+            },
+            "IncludeExcludeGroup": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": null
+            },
+            "Prop65Applies": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": null
+            },
+            "Prop65CancerHarm": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": null
+            },
+            "Prop65ReproductiveHarm": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": null
+            },
+            "Prop65Chemical": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": null
+            },
+            "ProhibitedStates": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "None"
+            },
+            "ParentChildSKU": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "PARENT1001018"
+            },
+            "ParentChildOption1": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "600"
+            },
+            "ParentChildOption2": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": null
+            },
+            "ParentChildOption3": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": null
+            },
+            "ParentChildOption4": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": null
+            },
+            "NAVInventoryPostingGroup": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "KAP"
+            },
+            "UnitPrice": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "71.99"
+            },
+            "CanBeDropShipped": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "Yes"
+            }
+          },
+          "additionalProperties": false,
+          "description": "The attributes here may change from time to time depending upon products being carried. \r\nTypically attributes are added, not subtracted."
+        },
+        "FFLRequest": {
+          "type": "object",
+          "properties": {
+            "licenseNumber": {
+              "type": "string",
+              "nullable": true,
+              "example": "3-42-789-06-6G-02056"
+            },
+            "name": {
+              "type": "string",
+              "nullable": true,
+              "example": "Han Solo"
+            },
+            "company": {
+              "type": "string",
+              "nullable": true,
+              "example": "Kessel Run Supplies"
+            },
+            "address1": {
+              "type": "string",
+              "nullable": true,
+              "example": "113 Falcon Ave"
+            },
+            "address2": {
+              "type": "string",
+              "nullable": true,
+              "example": null
+            },
+            "city": {
+              "type": "string",
+              "nullable": true,
+              "example": "Mos Eisley"
+            },
+            "state": {
+              "type": "string",
+              "nullable": true,
+              "example": "Tatooine"
+            },
+            "zip": {
+              "type": "string",
+              "nullable": true,
+              "example": "12345-1234"
+            },
+            "phone": {
+              "type": "string",
+              "nullable": true,
+              "example": "630-555-9540"
+            },
+            "licenseImage": {
+              "type": "string",
+              "nullable": true,
+              "example": null
+            },
+            "expires": {
+              "type": "string",
+              "description": "A date in the format of yyyy-MM-dd",
+              "format": "date-time",
+              "example": "2026-08-01"
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "Package": {
+          "type": "object",
+          "properties": {
+            "salesOrderNo": {
+              "type": "string",
+              "description": "The sales order number associated with the package.",
+              "nullable": true,
+              "example": "S1744979"
+            },
+            "purchaseOrderNo": {
+              "type": "string",
+              "description": "The purchase order number associated with the package.",
+              "nullable": true,
+              "example": "PO12345"
+            },
+            "packageNo": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "P821734"
+            },
+            "dateShipped": {
+              "type": "string",
+              "description": "",
+              "format": "date-time",
+              "example": "2024-12-19T13:04:17.91Z"
+            },
+            "carrierCode": {
+              "type": "string",
+              "description": "The shipping provider code",
+              "nullable": true,
+              "example": "USPS"
+            },
+            "serviceCode": {
+              "type": "string",
+              "description": "The shipping service.",
+              "nullable": true,
+              "example": "FIRST-PARCEL"
+            },
+            "trackingNo": {
+              "type": "string",
+              "description": "The tracking number for the package.",
+              "nullable": true,
+              "example": "9400116901056351940653"
+            },
+            "Products": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/PackageItem"
+              },
+              "description": "An array of products associated with each package.",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "PackageItem": {
+          "type": "object",
+          "properties": {
+            "ProductID": {
+              "type": "string",
+              "description": "The product numbers in each package.",
+              "nullable": true,
+              "example": "66529"
+            },
+            "quantity": {
+              "type": "number",
+              "description": "The quantity of products with the above product numbers in the package.",
+              "format": "float",
+              "example": 1
+            },
+            "serialNo": {
+              "type": "string",
+              "description": "The Serial Number of the Product, if applicable.",
+              "nullable": true,
+              "example": "SN123"
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "PartnerInventoryItem": {
+          "type": "object",
+          "properties": {
+            "productId": {
+              "type": "string",
+              "description": "The unique product ID of the product.",
+              "nullable": true,
+              "example": "10113"
+            },
+            "customerId": {
+              "type": "string",
+              "description": "A custom product ID provided by the dealer, if one is on file with Kinsey’s.",
+              "nullable": true,
+              "example": ""
+            },
+            "manufacturerId": {
+              "type": "string",
+              "description": "The product number provided by the manufacturer.",
+              "nullable": true,
+              "example": "10113"
+            },
+            "upc": {
+              "type": "string",
+              "description": "The UPC/barcode assigned to this product by the manufacturer.",
+              "nullable": true,
+              "example": "810173019774"
+            },
+            "price": {
+              "type": "number",
+              "description": "The current cost to the dealer to purchase this product.",
+              "format": "double",
+              "example": 3.26
+            },
+            "map": {
+              "type": "number",
+              "description": "The Minimum Advertised Price set by the vendor.",
+              "format": "double",
+              "example": 0
+            },
+            "quantityOnHand": {
+              "type": "number",
+              "description": "The total amount of available inventory for the product.",
+              "format": "double",
+              "example": 507
+            },
+            "RestockETA": {
+              "type": "string",
+              "description": "The estimated timeline before additional stock is acquired, if applicable.",
+              "nullable": true,
+              "example": ""
+            },
+            "Warehouses": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/WarehouseInventoryRecord"
+              },
+              "description": "A list of warehouses and inventory levels.",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "PartnerInventoryResponse": {
+          "type": "object",
+          "properties": {
+            "recordsCount": {
+              "type": "integer",
+              "description": "The total number of products returned in the query.",
+              "format": "int32",
+              "readOnly": true
+            },
+            "Products": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/PartnerInventoryItem"
+              },
+              "description": "An array of all products",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "SalesOrderLineRequest": {
+          "required": [
+            "productId",
+            "quantity"
+          ],
+          "type": "object",
+          "properties": {
+            "productId": {
+              "minLength": 1,
+              "type": "string",
+              "description": "The Product ID of the product to add to the order.",
+              "example": "1404385"
+            },
+            "description": {
+              "type": "string",
+              "description": "(optional) Setting this overwrites the default item description on the sales line",
+              "nullable": true,
+              "example": "Dakotas Toys with 36\" Feathers"
+            },
+            "quantity": {
+              "type": "number",
+              "description": "The quantity of the products to add to the order.",
+              "format": "double",
+              "example": 35
+            },
+            "customPrice": {
+              "type": "number",
+              "description": "Dealer's price to show on customer packing slip. Typically used by dropship dealers to show what the customer paid and not what the dealer paid.",
+              "format": "double"
+            },
+            "comment": {
+              "type": "string",
+              "description": "A comment to add to each specific product in the array.",
+              "nullable": true,
+              "example": "This is for an event"
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "SalesOrderLineResponse": {
+          "type": "object",
+          "properties": {
+            "productID": {
+              "type": "string",
+              "description": "The product ID of the product.",
+              "nullable": true,
+              "example": "1404385"
+            },
+            "qtyOrd": {
+              "type": "number",
+              "description": "The quantity ordered of the product.",
+              "format": "double",
+              "example": 35
+            },
+            "qtyRes": {
+              "type": "number",
+              "description": "The quantity reserved of the product.",
+              "format": "double",
+              "example": 0
+            },
+            "qtyBO": {
+              "type": "number",
+              "description": "The amount of this product on backorder.",
+              "format": "double",
+              "example": 35
+            },
+            "price": {
+              "type": "number",
+              "description": "The price of the product.",
+              "format": "double",
+              "example": 134.06
+            },
+            "status": {
+              "type": "integer",
+              "description": "The status of the order modification; refer to the key page for more details.",
+              "format": "int32",
+              "example": 7200
+            },
+            "message": {
+              "type": "string",
+              "description": "A plain text error message shown when the status does not equal 7200.",
+              "nullable": true,
+              "example": ""
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "SalesOrderOptions": {
+          "type": "object",
+          "properties": {
+            "backOrdersAllowed": {
+              "type": "boolean",
+              "description": "True/False. Enables backordering if products when there is insufficient quantity available."
+            },
+            "splitOrdersAllowed": {
+              "type": "boolean",
+              "description": "True/False. Allows the system to create multiple sales orders when there is insufficient inventory in the primary warehouse."
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "SalesOrderRequest": {
+          "required": [
+            "salesLines",
+            "shipTo"
+          ],
+          "type": "object",
+          "properties": {
+            "purchaseOrderNo": {
+              "type": "string",
+              "description": "The dealer provided purchase order number. Limited to 20 characters.",
+              "nullable": true,
+              "example": "MyPOnumber"
+            },
+            "shippingCarrier": {
+              "type": "string",
+              "description": "The requested shipping carrier ie: FEDEX, UPS, USPS, ect… This field will only be utilized if your \r\n            account is a non-flat rate account.Please reference the Shipping Carrier table in the Additional Information section for\r\n            more information",
+              "nullable": true,
+              "example": "FEDEX"
+            },
+            "shippingService": {
+              "type": "string",
+              "description": "The requested shipping service for the respective carrier, ie: Ground, 2 Day Air, ect… This field will only be\r\n            utilized if your account is a non-flat rate account.Please reference the Shipping Services By Carrier section in the\r\n            Additional Information section for more information. Limited to 10 characters.",
+              "nullable": true,
+              "example": "FREIGHT_ECONOMY"
+            },
+            "comment": {
+              "type": "string",
+              "description": "Creates a note on the sales order, rather than the individual sales lines.",
+              "nullable": true,
+              "example": "This is a header comment"
+            },
+            "primaryWarehouse": {
+              "type": "string",
+              "description": "The warehouse favored by the dealer. Only utilized if the dealer is not on the flat rate shipping program.",
+              "nullable": true,
+              "example": "WH1679"
+            },
+            "options": {
+              "$ref": "#/components/schemas/SalesOrderOptions"
+            },
+            "shipTo": {
+              "$ref": "#/components/schemas/ShipToRequest"
+            },
+            "fflInfo": {
+              "$ref": "#/components/schemas/FFLRequest"
+            },
+            "salesLines": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/SalesOrderLineRequest"
+              },
+              "description": "An array of all products in the sales order. At least one valid product must be sent with the sales order."
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "SalesOrderResponse": {
+          "type": "object",
+          "properties": {
+            "salesOrderNo": {
+              "type": "string",
+              "description": "The modified sales order number.",
+              "nullable": true,
+              "example": "S1664090"
+            },
+            "purchaseOrderNo": {
+              "type": "string",
+              "description": "The corresponding purchase order for the sales order.",
+              "nullable": true,
+              "example": "TEST4"
+            },
+            "warehouse": {
+              "type": "string",
+              "description": "",
+              "nullable": true,
+              "example": "WH1679"
+            },
+            "status": {
+              "type": "string",
+              "description": "The status of the updated order.",
+              "nullable": true,
+              "example": "Open"
+            },
+            "orderLines": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/SalesOrderLineResponse"
+              },
+              "description": "An array of products in the order",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "SalesOrderResult": {
+          "type": "object",
+          "properties": {
+            "referenceNo": {
+              "type": "string",
+              "description": "The reference number associated with the request.",
+              "nullable": true,
+              "example": "f90b18b2-f208-4af3-8255-055781e1c6a1"
+            },
+            "message": {
+              "type": "string",
+              "description": "The message returned from the server if applicable.",
+              "nullable": true,
+              "example": ""
+            },
+            "salesOrders": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/SalesOrderResponse"
+              },
+              "description": "",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "SalesOrderStatusResponse": {
+          "type": "object",
+          "properties": {
+            "salesOrderNo": {
+              "type": "string",
+              "description": "Returns the sales order ID",
+              "nullable": true,
+              "example": "W286648"
+            },
+            "status": {
+              "type": "string",
+              "description": "The status of the sales order. The various statuses are: NotValid, Open, Pending, PartiallyShipped, and Complete",
+              "nullable": true,
+              "example": "Complete"
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "ShipToOptions": {
+          "type": "object",
+          "properties": {
+            "adultSignature": {
+              "type": "boolean",
+              "description": "Used to specify \"Adult Signature Required\" on UPS options."
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "ShipToRequest": {
+          "required": [
+            "address",
+            "city",
+            "country"
+          ],
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The name on the shipment. API will reject anything above 100 characters and will trim to 35 characters",
+              "nullable": true,
+              "example": "Luke Skywalker"
+            },
+            "address": {
+              "minLength": 1,
+              "type": "string",
+              "description": "Address line one for the shipment. Limited to 100 characters.",
+              "example": "1660 Walker Road"
+            },
+            "address2": {
+              "type": "string",
+              "description": "Address line two for the shipment. Limited to 50 characters",
+              "nullable": true,
+              "example": "Apartment 2"
+            },
+            "city": {
+              "minLength": 1,
+              "type": "string",
+              "description": "The city of the shipping address. Limited to 30 characters",
+              "example": "Tatooine"
+            },
+            "state": {
+              "type": "string",
+              "description": "The state of the shipping address. Limited to 2 characters if shipping to US, limited to 20 for all other countries. Required if shipping to the US.",
+              "nullable": true,
+              "example": "AZ"
+            },
+            "zipCode": {
+              "type": "string",
+              "description": "The zip code of the shipping address. Limited to 20 characters. Required if shipping to the US.",
+              "nullable": true,
+              "example": "12345-1234"
+            },
+            "country": {
+              "minLength": 1,
+              "type": "string",
+              "description": "The country of the shipping address. Must be a 2 character ISO code.",
+              "example": "US"
+            },
+            "phone": {
+              "type": "string",
+              "description": "The phone number of the end recipient.",
+              "nullable": true,
+              "example": "5055554455"
+            },
+            "options": {
+              "$ref": "#/components/schemas/ShipToOptions"
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "ShipmentResponse": {
+          "type": "object",
+          "properties": {
+            "purchaseOrderNo": {
+              "type": "string",
+              "description": "The purchase order number of the shipment from the query parameter.",
+              "nullable": true,
+              "example": "PO12345"
+            },
+            "startDateTime": {
+              "type": "string",
+              "description": "The start date from your query.",
+              "format": "date-time",
+              "nullable": true,
+              "example": "2024-10-24T00:49:55Z"
+            },
+            "endDateTime": {
+              "type": "string",
+              "description": "The end date from your query.",
+              "format": "date-time",
+              "nullable": true,
+              "example": "2024-10-25T00:49:57Z"
+            },
+            "recordsCount": {
+              "type": "integer",
+              "description": "The number of records returned.",
+              "format": "int32",
+              "readOnly": true,
+              "example": 1
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Package"
+              },
+              "description": "An array of packages returned from the query",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        },
+        "WarehouseInventoryRecord": {
+          "type": "object",
+          "properties": {
+            "warehouseID": {
+              "type": "string",
+              "description": "The warehouse ID corresponds to a physical warehouse. Please reference the Valid Warehouse Locations in the Additional Information section for more information",
+              "nullable": true,
+              "example": "WH1679"
+            },
+            "quantityOnHand": {
+              "type": "number",
+              "description": "The inventory count specifically for the designated warehouse.",
+              "format": "double",
+              "example": 507
+            }
+          },
+          "additionalProperties": false,
+          "description": ""
+        }
+      }
+    }
+  },
+  "info": {
+    "title": "Kinsey's: Customer API",
+    "description": "\r\n<sub>_Document was last generated on 2026-06-05._</sub>\r\n\r\n# Base URL\r\nThe base URL for all API requests is `https://api.kinseysinc.com/v2/`.\r\n\r\n# Authentication\r\nKinsey's will assign a unique ID (API Identifier) to each dealer, which should be included with every query for authentication\r\npurposes.\r\n\r\n# Headers\r\nAll headers will be consistent across every endpoint, unless otherwise specified. JSON is the only accepted content type at this\r\ntime.\r\n- `Content-Type` Application/JSON\r\n- `X-API-KEY` Your API key, obtained from Kinsey's\r\n- `Kinsey-Source` (optional) Used by integrators to identify where the request is coming from. For example, Shopify, BigCommerce, Custom, etc. This informational field helps with troubleshooting.\r\n\r\n# Error handling\r\nAll API endpoints use the following error codes unless otherwise specified:\r\n- `400 Bad Request`: The request was malformed or missing required parameters.\r\n- `403 Forbidden`: The provided API key was invalid or missing.\r\n- `404 Not Found`: The requested resource was not found.\r\n- `405 Method Not Allowed`: The method is not allowed, and it could be triggered by a bad query.\r\n- `500 Internal Server Error`: An unexpected error occurred on the server\r\n\r\n# Additional Information\r\n\r\n## Status Codes\r\n| Codes | Status | Message | \r\n| ----- | ------ | ------- | \r\n| 7200 | Good | No error, everything is working properly. |\r\n| 7202 | Error | Internal Error - Product cannot be reserved. |\r\n| 7203 | Error | Internal Error - Product cannot be reserved. |\r\n| 7204 | Error | Internal Error - Sales Line Comment could not be written. |\r\n| 7250 | Error | Not enough quantity remains to fulfill requested quantity. Reduced quantity from X to Y. |\r\n| 7404 | Warning | Product is not a valid Product. |\r\n| 7405 | Warning | Product is out of stock and cannot be backordered. |\r\n| 7406 | Warning | Product is discontinued and cannot be backordered. |\r\n| 7409 | Warning | Product is restricted from purchase by this customer. |\r\n| 7410 | Warning | Product cannot be added to the same sales order as long guns or other accessories. |\r\n| 7450 | Warning | Product is discontinued and not enough quantity remains to fulfill requested quantity. |\r\n| 7455 | Warning | Product is out of stock and cannot be backordered. |\r\n| 7500 | Error | Internal Error - Unknown. |\r\n| 7501 | Error | Internal Error - Sales Line Not Written. |\r\n\r\n## Valid Warehouse Locations\r\n| API Warehouse Response | Physical Location | \r\n| ---------------------- | ----------------- |\r\n| WH1658 | 1658 Steel Way Mount Joy, PA 17552 |\r\n| WH1679 | 1679 Steel Way Mount Joy, PA 17552 |\r\n| WH250 | 250 Terry Blvd Louisville, KY 40229 |\r\n\r\n## Valid Shipping Carriers\r\n| APICarrierCode | Description |\r\n| -- | -- |\r\n| UPS | United Parcel Service |\r\n| FEDEX | FedEx |\r\n| USPS | United States Postal Service |\r\n\r\n## Shipping Services by Carrier\r\n\r\n### Shipping services for UPS\r\n| APIServiceCode | Description |\r\n| -- | -- |\r\n| GROUND  | UPS Ground |\r\n| EXPRESS  | UPS Express |\r\n| EXPRESS_PLUS  | UPS Express Plus |\r\n| 2ND_DAY_AIR_A | .M. UPS 2nd Day Air A.M. |\r\n| 2ND_DAY_AIR  | UPS 2nd Day Air |\r\n| NEXT_DAY_AIR_SAVER  | UPS Next Day Air Saver |\r\n| NEXT_DAY_AIR  | UPS Next Day Air |\r\n| NEXT_DAY_AIR_EARLY  | UPS Next Day Air Early |\r\n| 3_DAY_SELECT  | UPS 3 Day Select Air |\r\n| GFP  | UPS Ground with Freight Pricing |\r\n| 2ND_DAY_AIR_PR  | UPS 2nd Day Air Puerto Rico |\r\n| SAVER_CANADA  | UPS Canadian Economy |\r\n| STANDARD  | UPS Standard Canada |\r\n| EXPEDITED_CANADA  | UPS Expedited Canada |\r\n| NEXT_DAY_AIR_PR  | UPS Next Day Air Puerto Rico |\r\n| GROUND_PR  | UPS Ground Puerto Rico |\r\n\r\n### Shipping services for FedEx\r\n| APIServiceCode | Description |\r\n| -- | -- |\r\n| 2_DAY_AM | FedEx 2 Day Delivery by 10:30AM |\r\n| 2_DAY | FedEx 2 Day Delivery |\r\n| 1_DAY_FREIGHT | FedEx 1 Day Freight (Palletized) |\r\n| 2_DAY_FREIGHT | FedEx 2 Day Freight (Palletized) |\r\n| 3_DAY_FREIGHT | FedEx 3 Day Freight (Palletized) |\r\n| EXPRESS_SAVER | FedEx Express Saver 3 Day |\r\n| FIRST_OVERNIGHT | FedEx First Overnight |\r\n| FIRST_FREIGHT | FedEx First Overnight Freight |\r\n| FREIGHT_ECONOMY | FedEx Freight Economy |\r\n| FREIGHT_PRIORITY | FedEx Freight Priority |\r\n| GROUND | FedEx Ground |\r\n| GROUND_HOME_DELIVERY | FedEx Ground Home Delivery ($4 Surcharge) |\r\n| PRIORITY_OVERNIGHT | FedEx Priority Overnight |\r\n| SMART_POST | FedEx Smart Post |\r\n| STANDARD_OVERNIGHT | FedEx Standard Overnight |\r\n| INTERNATIONAL_PRIORITY_FREIGHT | FedEx International Priority Freight |\r\n| INTERNATIONAL_ECONOMY | FedEx International Economy |\r\n| INTERNATIONAL_ECONOMY_FREIGHT | FedEx International Economy Freight |\r\n| INTERNATIONAL_FIRST | FedEx International First Class |\r\n| INTERNATIONAL_PRIORITY | FedEx International Priority |\r\n| INTERNATIONAL_GROUND | FedEx International Ground |\r\n\r\n### Shipping services for USPS\r\n| APIServiceCode | Description |\r\n| -- | -- |\r\n| GROUND-ADVANTAGE | USPS Ground Advantage (under 2 lbs) |\r\n| EXPRESS-PARCEL | USPS Priority Mail Express Parcel |\r\n| FIRST-PARCEL | USPS First Class Mail Parcel |\r\n| PRIORITY-PARCEL | USPS Priority Mail Parcel |",
+    "contact": {
+      "email": "api-info@Kinseysinc.com"
+    },
+    "version": "v2.5.1"
+  },
+  "openapi": "3.0.4",
+  "paths": {
+    "/Inventory": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "summary": "Gets inventory information for products",
+        "parameters": [
+          {
+            "name": "products",
+            "in": "query",
+            "description": "(optional): Filter by product ID, with each product separated by commas. \r\n            A maximum of 2000 characters is allowed for this value, including the commas.\r\n            If this parameter is omitted then all products available for sale to the dealer will be returned (very large file).",
+            "schema": {
+              "type": "string"
+            },
+            "example": "10113,10116"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerInventoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Products": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get product file",
+        "description": "\r\nProvides a comprehensive and detailed catalog of all the products currently carried by Kinsey’s. \r\n            Depending on a dealers approval status with the manufacturer not all products may actually be available for purchase by individual dealers.\r\n\r\n​\r\n\r\nThe response is a JSON object containing an extensive set of fields related to the current catalog of products for sale. \r\n            The attributes contained within this file may change from time to time depending upon products being carried. \r\n            Typically attributes are added, not subtracted.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExampleProductResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Products/GetById": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get by ids",
+        "description": "\r\nProvides a detailed catalog of the requested products currently carried by Kinsey’s. \r\n            Depending on a dealers approval status with the manufacturer not all products may actually be available for purchase by individual dealers.\r\n\r\n​\r\n\r\nThe response is a JSON object containing an extensive set of fields related to the requested products for sale.\r\n            The attributes contained within this file may change from time to time depending upon products being carried. \r\n            Typically attributes are added, not subtracted.",
+        "parameters": [
+          {
+            "name": "products",
+            "in": "query",
+            "description": "Filter by product ID, with each product separated by commas.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExampleProductResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Products/download": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Download product file",
+        "description": "\r\nReturns the entire output of the `/Products` endpoint as a JSON file.\r\n\r\n​\r\n\r\nUpon completion, the server will return a successful status, initiating an automatic download of the JSON file to your computer. \r\n            The response will be the same as the `/Products` call with the exception that data will be returned in the form of a file rather than as text in the API response.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Products/Allowed": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Gets a list of all purchaseable products via API",
+        "description": "This is a limited list of allowed products. It may be more restrictive than placing an order over the phone - please contact your rep with any questions.",
+        "parameters": [
+          {
+            "name": "products",
+            "in": "query",
+            "description": "(optional): Filter by product ID, with each product separated by commas. \r\n            A maximum of 2000 characters is allowed for this value, including the commas.\r\n            If this parameter is omitted then all allowed products will be returned.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "10113,10116"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllowedProductResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SalesOrder": {
+      "post": {
+        "tags": [
+          "SalesOrder"
+        ],
+        "summary": "Create a sales order",
+        "description": "Adds a new sales order to the system. All parameters for this end point are supplied in the body.",
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesOrderRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesOrderRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesOrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SalesOrder/{salesOrderNo}": {
+      "patch": {
+        "tags": [
+          "SalesOrder"
+        ],
+        "summary": "Add lines to existing order",
+        "description": "Modify an existing sales order. \r\n**Note that lines can only be added if the order has not been released to the warehouse for processing.**",
+        "parameters": [
+          {
+            "name": "salesOrderNo",
+            "in": "path",
+            "description": "The existing sales order id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "S1664090"
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddToSalesOrderRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddToSalesOrderRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddToSalesOrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "SalesOrder"
+        ],
+        "summary": "Delete a pending sales order",
+        "description": "This endpoint is used to delete a pending sales order. \r\n**Note that orders can only be deleted if the order has not been released to the warehouse for picking.**",
+        "parameters": [
+          {
+            "name": "salesOrderNo",
+            "in": "path",
+            "description": "The order number of the sale.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "S1664090"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "423": {
+            "description": "Locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "SalesOrder"
+        ],
+        "summary": "Get the status of an order",
+        "description": "This endpoint retrieves the status of a provided sales order",
+        "parameters": [
+          {
+            "name": "salesOrderNo",
+            "in": "path",
+            "description": "The order number for the sale. This is the order number assigned by Kinsey’s, not the dealer assigned Purchase Order Number.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "W286648"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesOrderStatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Shipments/{purchaseOrderNo}": {
+      "get": {
+        "tags": [
+          "Shipments"
+        ],
+        "summary": "Retrieve shipping details of package(s) based on purchase order number or a date range.",
+        "description": "\r\nIf you submit both a purchase order number and a date range as parameters then the date range will be ignored.\r\n\r\n​\r\n\r\nIf both startDate and endDate are set, they cannot be more than 5 days apart.\r\n\r\nIf endDate is not supplied, endDate defaults to 2 hours from given startDate.\r\n\r\n​\r\n\r\nDates must be formatted in ISO 8601, UTC `YYYY-MM-DDTHH:mm:ssZ`.",
+        "parameters": [
+          {
+            "name": "purchaseOrderNo",
+            "in": "path",
+            "description": "The order number for the sale. Limited to 20 characters. Must be URI encoded.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "PO12345"
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "The start date for searching shipping information.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "=2024-10-24T00:49:55Z"
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "The end date for your search. No more than 5 days after the start date.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "2024-10-25T00:49:57Z"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
