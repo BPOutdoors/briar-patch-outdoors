@@ -85,7 +85,7 @@ function ShopContent() {
         .from('products')
         .select('website_category, category_name, brand, display_price, map_price, msrp')
         .eq('visible', true)
-        .eq('requires_ffl', false)
+        .or('requires_ffl.is.null,requires_ffl.eq.false')
       if (activeBroad !== 'all') query = query.eq('broad_category', activeBroad)
       const { data } = await query
       if (data) {
@@ -120,7 +120,7 @@ function ShopContent() {
       .from('products')
       .select('id, name, brand, display_price, map_price, msrp, image_url, in_stock, quantity, broad_category, website_category, website_subcategory, category_name, product_group_name, product_type', { count: 'exact' })
       .eq('visible', true)
-      .eq('requires_ffl', false)
+      .or('requires_ffl.is.null,requires_ffl.eq.false')
       .range(from, to)
 
     // Always put out-of-stock items last, then apply user's chosen sort
