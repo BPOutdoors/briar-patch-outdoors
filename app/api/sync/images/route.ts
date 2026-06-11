@@ -5,16 +5,15 @@ import { Writable } from 'stream'
 
 export const dynamic = 'force-dynamic'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 const FTP_IMAGE_PATH = '/images/1024x1024 Item Images'
 const BUCKET = 'product-images'
 const BATCH_SIZE = 50
 
 export async function POST(request: Request) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.SYNC_SECRET_KEY}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -137,6 +136,10 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   // Status check — how many products have real images, none-marked, or not yet attempted
   const { count: withImages } = await supabase
     .from('products')

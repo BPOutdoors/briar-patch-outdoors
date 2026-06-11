@@ -3,11 +3,6 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 const GA_TAX_RATE = 0.08
 
 // Nexus thresholds — most states use these standard limits
@@ -17,6 +12,11 @@ const WARNING_PCT = 0.75 // alert at 75% of either threshold
 
 async function checkNexus(state: string, subtotal: number) {
   if (!state || state.toUpperCase() === 'GA') return // skip home state
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   try {
     // Get current totals for this state
@@ -116,6 +116,10 @@ async function checkNexus(state: string, subtotal: number) {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   try {
     const body = await request.json()
     const {
