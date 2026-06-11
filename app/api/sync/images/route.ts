@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 const FTP_IMAGE_PATH = '/images/1024x1024 Item Images'
 const BUCKET = 'product-images'
-const BATCH_SIZE = 50
+const BATCH_SIZE = 10
 
 export async function POST(request: Request) {
   const supabase = createClient(
