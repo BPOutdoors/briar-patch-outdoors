@@ -51,7 +51,7 @@ export default function HomePage() {
             Premium gear for hunting, archery, camping & more
           </p>
           <Link
-            href="/products"
+            href="/shop"
             className="px-10 py-4 text-lg font-bold rounded uppercase tracking-wide transition-colors shadow-lg text-white"
             style={{ backgroundColor: 'var(--primary)' }}
           >

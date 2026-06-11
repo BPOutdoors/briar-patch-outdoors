@@ -108,8 +108,11 @@ export default function POSPage() {
   // ── DRAWER ──────────────────────────────────────────────────────────────────
   const [drawerStatus, setDrawerStatus] = useState<'open' | 'closed'>('closed')
   const [drawerSession, setDrawerSession] = useState<any>(null)
+  const [lastCloseAmount, setLastCloseAmount] = useState<number | null>(null)
   const [showDrawerModal, setShowDrawerModal] = useState<'open' | 'close' | null>(null)
   const [drawerOpeningCash, setDrawerOpeningCash] = useState('')
+  const [openBillCounts, setOpenBillCounts] = useState<Record<number, number>>({})
+  const [openCoinCounts, setOpenCoinCounts] = useState<Record<number, number>>({})
   const [billCounts, setBillCounts] = useState<Record<number, number>>({})
   const [coinCounts, setCoinCounts] = useState<Record<number, number>>({})
   const [drawerClosing, setDrawerClosing] = useState(false)
@@ -129,6 +132,10 @@ export default function POSPage() {
     const savedDrawer = localStorage.getItem('pos_drawer')
     if (savedDrawer) {
       try { const s = JSON.parse(savedDrawer); setDrawerSession(s); setDrawerStatus('open') } catch (_) {}
+    }
+    const savedLastClose = localStorage.getItem('pos_last_close')
+    if (savedLastClose) {
+      try { setLastCloseAmount(parseFloat(savedLastClose)) } catch (_) {}
     }
     const savedSuspended = localStorage.getItem('pos_suspended')
     if (savedSuspended) {
@@ -237,18 +244,23 @@ export default function POSPage() {
   const hasDropship = oosCartItems.some(i => i.fulfillment === 'dropship')
 
   // ── DRAWER ─────────────────────────────────────────────────────────────────
+  const countedOpenBills = BILL_DENOMS.reduce((sum, d) => sum + d.value * (openBillCounts[d.value] || 0), 0)
+  const countedOpenCents = COIN_DENOMS.reduce((sum, d) => sum + d.cents * (openCoinCounts[d.cents] || 0), 0)
+  const countedOpenCash = countedOpenBills + countedOpenCents / 100
+
   const countedBills = BILL_DENOMS.reduce((sum, d) => sum + d.value * (billCounts[d.value] || 0), 0)
   const countedCents = COIN_DENOMS.reduce((sum, d) => sum + d.cents * (coinCounts[d.cents] || 0), 0)
   const countedCash = countedBills + countedCents / 100
 
   async function openDrawer() {
-    const opening = parseFloat(drawerOpeningCash) || 0
+    const opening = countedOpenCash
     const session = { openedAt: new Date().toISOString(), openingCash: opening }
     localStorage.setItem('pos_drawer', JSON.stringify(session))
     setDrawerSession(session)
     setDrawerStatus('open')
     setShowDrawerModal(null)
-    setDrawerOpeningCash('')
+    setOpenBillCounts({})
+    setOpenCoinCounts({})
     await supabase.from('drawer_sessions').insert({ opening_cash: opening, opened_at: session.openedAt })
   }
 
@@ -277,6 +289,8 @@ export default function POSPage() {
       denomination_counts: { bills: billCounts, coins: coinCounts },
     }).eq('opened_at', drawerSession.openedAt)
     localStorage.removeItem('pos_drawer')
+    localStorage.setItem('pos_last_close', countedCash.toFixed(2))
+    setLastCloseAmount(countedCash)
     setDrawerSession(null)
     setDrawerStatus('closed')
     setShowDrawerModal(null)
@@ -629,23 +643,74 @@ export default function POSPage() {
 
       {/* Open Drawer Modal */}
       {showDrawerModal === 'open' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
-            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--primary)' }}>Open Cash Drawer</h2>
-            <p className="text-sm text-gray-500 mb-5">Enter the starting cash amount in the drawer.</p>
-            <label className="block text-xs font-semibold text-gray-500 mb-1">Starting Cash</label>
-            <div className="relative mb-5">
-              <span className="absolute left-3 top-2.5 text-gray-400">$</span>
-              <input type="number" min="0" step="0.01" placeholder="0.00" value={drawerOpeningCash}
-                onChange={e => setDrawerOpeningCash(e.target.value)}
-                className="w-full border rounded-lg pl-7 pr-3 py-2.5 text-sm font-semibold"
-                autoFocus onKeyDown={e => e.key === 'Enter' && openDrawer()} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-auto py-6">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg mx-4">
+            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--primary)' }}>Open Cash Drawer — Count Starting Cash</h2>
+            {lastCloseAmount !== null && (
+              <div className="rounded-lg px-4 py-2 mb-4 text-sm font-semibold flex items-center justify-between"
+                style={{ backgroundColor: '#fffbeb', border: '1px solid #f59e0b' }}>
+                <span className="text-amber-700">Previous close amount</span>
+                <span className="text-amber-800 font-bold">${lastCloseAmount.toFixed(2)}</span>
+              </div>
+            )}
+
+            {/* Bills */}
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Bills</p>
+              <div className="grid grid-cols-3 gap-2">
+                {BILL_DENOMS.map(d => (
+                  <div key={d.value} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                    <span className="text-sm font-bold text-gray-600 w-10">{d.label}</span>
+                    <input type="number" min="0" step="1" placeholder="0"
+                      value={openBillCounts[d.value] || ''}
+                      onChange={e => setOpenBillCounts(prev => ({ ...prev, [d.value]: parseInt(e.target.value) || 0 }))}
+                      className="w-14 border rounded px-2 py-1 text-sm text-center font-semibold"
+                      style={{ borderColor: '#ddd' }} />
+                    <span className="text-xs text-gray-400">${((openBillCounts[d.value] || 0) * d.value).toFixed(0)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Coins */}
+            <div className="mb-5">
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Coins</p>
+              <div className="grid grid-cols-3 gap-2">
+                {COIN_DENOMS.map(d => (
+                  <div key={d.cents} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                    <span className="text-sm font-bold text-gray-600 w-10">{d.label}</span>
+                    <input type="number" min="0" step="1" placeholder="0"
+                      value={openCoinCounts[d.cents] || ''}
+                      onChange={e => setOpenCoinCounts(prev => ({ ...prev, [d.cents]: parseInt(e.target.value) || 0 }))}
+                      className="w-14 border rounded px-2 py-1 text-sm text-center font-semibold"
+                      style={{ borderColor: '#ddd' }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Totals */}
+            <div className="rounded-xl p-4 mb-5 space-y-2" style={{ backgroundColor: '#f8f8f8' }}>
+              <div className="flex justify-between text-sm font-bold">
+                <span className="text-gray-600">Counted Cash</span>
+                <span style={{ color: 'var(--primary)' }}>${countedOpenCash.toFixed(2)}</span>
+              </div>
+              {lastCloseAmount !== null && (
+                <div className="flex justify-between text-base font-bold border-t pt-2" style={{ borderColor: '#e5e7eb' }}>
+                  <span>vs. Previous Close</span>
+                  <span style={{ color: Math.abs(countedOpenCash - lastCloseAmount) < 0.01 ? '#16a34a' : '#dc2626' }}>
+                    {countedOpenCash - lastCloseAmount >= 0 ? '+' : ''}{(countedOpenCash - lastCloseAmount).toFixed(2)}
+                    {Math.abs(countedOpenCash - lastCloseAmount) < 0.01 ? ' ✓' : ' ⚠'}
+                  </span>
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-3">
               <button onClick={openDrawer}
                 className="flex-1 py-3 rounded-xl font-bold text-white text-sm"
-                style={{ backgroundColor: 'var(--primary)' }}>Open Drawer</button>
-              <button onClick={() => setShowDrawerModal(null)}
+                style={{ backgroundColor: 'var(--primary)' }}>Open Drawer (${countedOpenCash.toFixed(2)})</button>
+              <button onClick={() => { setShowDrawerModal(null); setOpenBillCounts({}); setOpenCoinCounts({}) }}
                 className="px-5 py-3 rounded-xl font-semibold text-sm border" style={{ borderColor: '#ddd', color: '#666' }}>Cancel</button>
             </div>
           </div>
