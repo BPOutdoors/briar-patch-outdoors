@@ -16,18 +16,21 @@ export default function IntegrationsPage() {
   const [lastInventorySync, setLastInventorySync] = useState<string | null>(null)
   const [lastCategoriesSync, setLastCategoriesSync] = useState<string | null>(null)
 
+  // All sync calls go through /api/admin/sync-trigger — keeps secret key server-side only
+  async function triggerSync(action: string) {
+    const response = await fetch('/api/admin/sync-trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    })
+    return response.json()
+  }
+
   async function triggerFullSync() {
     setSyncingFull(true)
     setFullResult(null)
     try {
-      const response = await fetch('/api/sync', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SYNC_SECRET_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      })
-      const result = await response.json()
+      const result = await triggerSync('full')
       setFullResult(result)
       setLastFullSync(new Date().toLocaleString())
     } catch (error: any) {
@@ -37,9 +40,7 @@ export default function IntegrationsPage() {
   }
 
   async function checkImageStatus() {
-    const response = await fetch('/api/sync/images', {
-      headers: { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SYNC_SECRET_KEY}` },
-    })
+    const response = await fetch('/api/admin/sync-trigger', { method: 'GET' })
     const result = await response.json()
     setImageStatus(result)
   }
@@ -48,14 +49,7 @@ export default function IntegrationsPage() {
     setSyncingImages(true)
     setImagesResult(null)
     try {
-      const response = await fetch('/api/sync/images', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SYNC_SECRET_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      })
-      const result = await response.json()
+      const result = await triggerSync('images')
       setImagesResult(result)
       checkImageStatus()
     } catch (error: any) {
@@ -75,14 +69,7 @@ export default function IntegrationsPage() {
 
     try {
       while (true) {
-        const response = await fetch('/api/sync/images', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SYNC_SECRET_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        })
-        const result = await response.json()
+        const result = await triggerSync('images')
         if (!result.success) throw new Error(result.error)
 
         totalDownloaded += result.downloaded
@@ -91,7 +78,6 @@ export default function IntegrationsPage() {
         remaining = result.remainingWithoutImages
         batches++
 
-        // Update display after each batch
         setImagesResult({
           success: true,
           downloaded: totalDownloaded,
@@ -104,8 +90,6 @@ export default function IntegrationsPage() {
         })
 
         if (!result.keepRunning) break
-
-        // Small pause between batches to avoid overwhelming FTP
         await new Promise(r => setTimeout(r, 1000))
       }
     } catch (error: any) {
@@ -120,14 +104,7 @@ export default function IntegrationsPage() {
     setSyncingCategories(true)
     setCategoriesResult(null)
     try {
-      const response = await fetch('/api/sync/categories', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SYNC_SECRET_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      })
-      const result = await response.json()
+      const result = await triggerSync('categories')
       setCategoriesResult(result)
       setLastCategoriesSync(new Date().toLocaleString())
     } catch (error: any) {
@@ -140,14 +117,7 @@ export default function IntegrationsPage() {
     setSyncingInventory(true)
     setInventoryResult(null)
     try {
-      const response = await fetch('/api/sync/inventory', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SYNC_SECRET_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      })
-      const result = await response.json()
+      const result = await triggerSync('inventory')
       setInventoryResult(result)
       setLastInventorySync(new Date().toLocaleString())
     } catch (error: any) {
@@ -257,7 +227,7 @@ export default function IntegrationsPage() {
           style={{ backgroundColor: 'var(--cream-dark)' }}>
           <div>
             <p className="text-xs text-gray-500 mb-1">Dealer Account</p>
-            <p className="text-sm font-semibold">1004474</p>
+            <p className="text-sm font-semibold">****474</p>
           </div>
           <div>
             <p className="text-xs text-gray-500 mb-1">Auto Schedule</p>
