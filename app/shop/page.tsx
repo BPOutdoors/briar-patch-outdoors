@@ -64,10 +64,11 @@ function ShopContent() {
       .then(({ data }) => { if (data) setBanner(data) })
     supabase.from('category_visibility').select('slug, enabled')
       .then(({ data }) => {
-        if (data) {
+        if (data && data.length > 0) {
           const enabled = new Set(data.filter((r: any) => r.enabled).map((r: any) => r.slug))
           setEnabledCategories(enabled)
         }
+        // If table is empty or missing, keep default (all categories enabled)
       })
     // Load active promotions
     const now = new Date().toISOString()
